@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "goshoppr",
+  "private_key_id": "9cfc3d46646301e9036ec0bb1e5a757f4c454c52",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDxZFVplLfrF9Oi\npz0K7+pDPk54bMGC4Lgi4+8bC7t7QI4FcF2iwYaxUDIWwyFDOM0kqV2Zwmj3sqQU\n1dk1acypkVulVaQbK4lw9YOgge8Rr7fHfq/wcLZFoe2Dic/xszNn3L7bK6fAIvHc\n6U3vINwcD7qAauDvXQy+nYNaugCmJKo69Ea5pm5d2fmjUWwm/NlKfqEaDDkpozBc\nE7y2lqzE/43JelKX+9B9iiPPlxnUQ0srDPkGNNx9up8nXHdVao92XecLJe6Ql2gj\nmrVm6euHnccJr/9p+cZudraQKZ0JW/eHImlT7m3JybzsWAcLD8ej/uHKQzhicOuZ\nepWG1AQ3AgMBAAECggEAXCBiyKzNlJe/WbBiB66QxaEd6a/4Gq8RF5/OPZA4uU1l\n5oV/9wHNGhb1RuKp6zHeeUN6SZh83yv6m0kSYOREC+NCCtOokgYHqmjJF5T/XMyn\nYyfile0uY1ztfOo3xpMR523EGXmLyDSOAjW4XK850ivejew8dJ4aoxUScKnUXZOa\n6sb8pQhS5p9JuE1HlzwfbH366ekOVIr/COGYloMBbE/GGLK2fpA0UKOrPQM94uaE\noeTtQT81GzbjE71DWwIBjdEmz4JwWk8A5iC5+DYyNVDRnXD1yB7ojzjaAZxBt/no\nwcry/n7e6kt2PjgKRih9SxTYOD/UnOAdwhu1E79MAQKBgQD9plYFOa1hTV5ExrMI\n41NTRjJYsTUhHi7clhr8HOd3V7xf7Hx5di3WGLDQj4nbZK9vvmi+TnWae13R9Tf+\nd4AQxmJO3qs7H/7koMBu679h4G5SvUaVgcjHtgnKRHEW53W9pzqYxyoznQl+wteY\neoSoF1U8Co353+vHpcKsYg4utwKBgQDzoOv3cEhk5Gi06CyTHkleTGErI2fbRdza\nLobh18EPMgzollx4NpMeC1p+RYMp0ihku+1RDIejA1hbRd9KzmK7HgC0ntqVqyWk\nqUdr2Z0lWq2FQ/4d85tPZFxJ5rKiqlt4wxYmrG9s41IRHEunnOuLGqmyD4qI2ayz\n6p1ZSOtWgQKBgCr17UPdTPxZ+klzzgcHWamVDhnviaweTJmX4uIokxunhIRKrZp0\n5baJYAkzBopeN0iZ22vAJjMQCgfxnJZA7zPoJeZt2FqfRLC8eVtQGo4dURI6dKYF\n4VfSAT588RqMAWkp1cbilMdBJcaOga2Vsro1mX4d24Yi4vBhpuNDiFtpAoGBAMlk\nKgtWLxHv2jpJfqdyrtWbr+s4Dl8tZj6ZnXhNoNLN3evad8AL5Rs96WVeUumcRzXW\nP3vzLqBrYHu6y7WL3AOv7odglXKJksmGAXs+3W+GgNAb/5GE0csUPFH+uYZL6udt\n5P69JjLNywZH7KY2ymMn/EUsIam0vtXPSJkI9TmBAoGAM78z5OM+zw1y8f60t47x\nDXFMoF/5L4RC1yDsXTY/wjEQm4HUx1wZzH8K5xPfjH1ZMqzTKOgYnDsAlrupnWXC\nF+Up4O56lbp02PVcVRqP/QNjvrKn13ADeM6kmLraIVUN/QYO++Xt2fKsn0ukEw9F\nF4xvAuPoVi5sdDDOcZrJJZs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "service-account@goshoppr.iam.gserviceaccount.com",
+  "client_id": "111463655535858116356",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/service-account%40goshoppr.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

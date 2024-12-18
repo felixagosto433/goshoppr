@@ -1,0 +1,36 @@
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore environment variables
+.env
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore database files
+*.sqlite3
+*.db
+
+# Ignore VSCode and IDE settings
+.vscode/
+.idea/
+
+# Ignore test coverage data
+.coverage
+htmlcov/
+
+# Ignore Python dependencies
+pip-wheel-metadata/
+dist/
+build/
+
+# Ignore Heroku deployment artifacts
+Procfile
