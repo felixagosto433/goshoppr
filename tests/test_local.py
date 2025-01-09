@@ -1,6 +1,6 @@
 import unittest
 from flask import Flask
-from app import create_app, db  # Import your app factory function and database instance
+from app import create_app, db # Import your app factory function and database instance
 from weaviate.util import generate_uuid5
 from config import TestingConfig
 
