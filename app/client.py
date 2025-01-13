@@ -1,22 +1,21 @@
-import weaviate
 import os
-from dotenv import load_dotenv
-from weaviate.classes.init import AdditionalConfig, Timeout, Auth
+import weaviate
+from weaviate.classes.init import Auth
 
-load_dotenv()
+FLASK_ENV = os.getenv("FLASK_ENV", "development")
 
-WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
-
-client = weaviate.connect_to_weaviate_cloud(
-    cluster_url="https://e9crkmaxsxea5xwram0vkw.c0.europe-west3.gcp.weaviate.cloud",
-    auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
-    additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+if FLASK_ENV == "production":
+    client = weaviate.connect_to_weaviate_cloud(
+        cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
+        auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
+    )
+    print("Connected to Weaviate Cloud.")
+elif FLASK_ENV in ["development", "testing"]:
+    client = weaviate.connect_to_local(
+    host="127.0.0.1",  # Use a string to specify the host
+    port=8080,
+    grpc_port=50051,
 )
-
-# Test connection
-if client.is_ready():
-    print("Connected to Weaviate Cloud Service!")
+    print("Connected to Local Weaviate.")
 else:
-    print("Failed to connect.")
-
-client.close()
+    raise ValueError("Invalid FLASK_ENV. Please set it to 'production', 'development', or 'testing'.")
