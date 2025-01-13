@@ -1,7 +1,6 @@
 import unittest
 from flask import Flask
-from app import create_app, db # Import your app factory function and database instance
-from weaviate.util import generate_uuid5
+from app import create_app, db
 from config import TestingConfig
 
 class FlaskRoutesTestCase(unittest.TestCase):
@@ -9,7 +8,7 @@ class FlaskRoutesTestCase(unittest.TestCase):
         self.app = create_app(config_class=TestingConfig)
         self.client = self.app.test_client()
         with self.app.app_context():
-            db.create_all()  # Initialize the database
+            db.create_all()
 
         self.test_item = {
             "nombre": "Test Item",
@@ -54,10 +53,12 @@ class FlaskRoutesTestCase(unittest.TestCase):
         # Add the test item first
         response = self.client.post('/items', json=self.test_item)
         self.assertEqual(response.status_code, 201)
+        print("test item added succesfully!")
         
         # Update the test item
         updated_data = {"precio": 12.99}
         response = self.client.put('/items/Test Item', json=updated_data)
+        print("Item updated succesfully!")
         
         # Verify the update by fetching the item
         response = self.client.get('/items', query_string={"name": "Test Item"})
