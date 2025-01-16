@@ -36,7 +36,10 @@ class ProductionConfig(Config):
     Configuration for production environment.
     """
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # Production database (PostgreSQL, etc.)
+    # Other production settings
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///production.db'  # Dummy databse uri for now. 
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    #SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # Production database (PostgreSQL, etc.)
     WEAVIATE_CLOUD_URL = os.getenv('WEAVIATE_CLOUD_URL')  # Ensure this is set in production
     WEAVIATE_ADMIN_KEY = os.getenv('WEAVIATE_ADMIN_KEY')  # Ensure this is set in production
 
