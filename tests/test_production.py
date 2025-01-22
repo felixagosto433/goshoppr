@@ -17,6 +17,17 @@ class ProductionRoutesTestCase(unittest.TestCase):
             "recommended_for": ["Test Use"],
             "link": "https://example.com/test-item"
         }
+        
+    def test_chat_route(self):
+        """
+        Test the /chat endpoint with a valid message.
+        """
+        payload = {"message": "Ayuda para dormir"}
+        response = requests.post(f"{self.BASE_URL}/chat", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("response", response.json())
+        self.assertTrue(len(response.json()["response"]) > 0)
 
     def test_get_item_by_name(self):
         response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})

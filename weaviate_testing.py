@@ -8,7 +8,6 @@ from weaviate.util import generate_uuid5
 from flask import request
 from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 
-
 # Connecting to local.
 # client = weaviate.connect_to_local()
 
@@ -20,10 +19,17 @@ from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 load_dotenv()
 WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
+# Open AI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+headers = {
+    "X-OpenAI-Api-Key": openai_key,
+}
+
 client = weaviate.connect_to_weaviate_cloud(
     cluster_url="https://pxplk2lvsey4xwtvdu1jeg.c0.us-east1.gcp.weaviate.cloud",
     auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+    headers=headers
 )
 
 # Test connection
@@ -32,10 +38,13 @@ if client.is_ready():
 else:
     print("Failed to connect.")
 
-collections = client.collections.list_all()
-print("______________CHECKING IF COLLECTIONS ARE PRESENT___________")
-print(f"Existing collections: {collections.keys()}") 
-collection = client.collections.get("Supplements")
+try:
+    collections = client.collections.list_all()
+    print("______________CHECKING IF COLLECTIONS ARE PRESENT___________")
+    print(f"Existing collections: {collections.keys()}") 
+    collection = client.collections.get("Supplements")
+except Exception as e:
+    print(f"Error locating collection {e}")
 
 # Google Sheets authentication
 # SERVICE_KEY_PATH = os.getenv("SERVICE_KEY")
@@ -97,9 +106,14 @@ collection = client.collections.get("Supplements")
 #     print("Connection closed. Done.")
 
 # PRINT SCHEMA
-print("_________________________________________")
-print("SCHEMA")
-print(collection)
+# collection.config.update({
+#     "vectorizer": "text2vec-openai"  # You can use other vectorizers, depending on your setup.
+# })
+# print("Schema succesfully updated")
+
+# print("_________________________________________")
+# print("SCHEMA")
+# print(collection)
 
 # PRINT ALL OBJECTS
 # print("_________________________________________")
@@ -166,38 +180,38 @@ print(collection)
 #     print(f"Error deleting item: {e}")
 
 # Hardcode testing adding item, dupliate item logic, and missing fields logic.
-test_item = {
-            "nombre": "Test Item",
-            "precio": 10.00,
-            "inventario": 100,
-            "categoria": "Test Category",
-            "descripcion": "This is a test item.",
-            "ingredientes": ["Test Ingredient"],
-            "allergens": ["None"],
-            "usage": "Test usage instructions.",
-            "recommended_for": ["Test Use"],
-            "link": "https://example.com/test-item"
-        }
+# test_item = {
+#             "nombre": "Test Item",
+#             "precio": 10.00,
+#             "inventario": 100,
+#             "categoria": "Test Category",
+#             "descripcion": "This is a test item.",
+#             "ingredientes": ["Test Ingredient"],
+#             "allergens": ["None"],
+#             "usage": "Test usage instructions.",
+#             "recommended_for": ["Test Use"],
+#             "link": "https://example.com/test-item"
+#         }
 
-try:
-    required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
-    missing_fields = [item for item in required_fields if item not in test_item]
+# try:
+#     required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
+#     missing_fields = [item for item in required_fields if item not in test_item]
 
-    if missing_fields:
-        print(f"Some fields are missing: {missing_fields}")
+#     if missing_fields:
+#         print(f"Some fields are missing: {missing_fields}")
     
-    # Generate UUID based on "nombre"
-    object_uuid = generate_uuid5({"nombre": test_item["nombre"]})
-    collection = client.collections.get("Supplements")
+#     # Generate UUID based on "nombre"
+#     object_uuid = generate_uuid5({"nombre": test_item["nombre"]})
+#     collection = client.collections.get("Supplements")
 
-    if collection.data.exists(object_uuid):
-        print("Item already exists!")
+#     if collection.data.exists(object_uuid):
+#         print("Item already exists!")
     
-    collection.data.insert(test_item, uuid=object_uuid)
-    print('Item added Succesfully')
+#     collection.data.insert(test_item, uuid=object_uuid)
+#     print('Item added Succesfully')
 
-except Exception as e:
-    print(f"Error found: {e}")
+# except Exception as e:
+#     print(f"Error found: {e}")
 
 # Hardcode testing updating item
 # name = "Test Item"
@@ -248,6 +262,11 @@ except Exception as e:
 # except Exception as e:
 #     print(f"Error getting item: {e}")
 
+# DELETE A COLLECTION
+
+# client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
+# print("Collection succesfully deleted")
+
 # Deleting each item in the weaviate db by id
 # try:
 #     print(f"Clearing all data from the '{collection}' collection...")
@@ -264,6 +283,26 @@ except Exception as e:
 # finally:
 #     client.close()
 #     print("Connection closed.")
+
+# FIRST SCENARIO TESTING
+
+try:
+    response = collection.query.near_text(
+        query = "Con Vitamina D3",
+        limit=5
+    )
+
+    # Parse response
+    if response and response.objects:
+        result_strings = [
+            f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+            for obj in response.objects
+        ]
+        print("\n".join(result_strings))
+
+    print("No supplements found for your query. Please try a different category.")
+except Exception as e:
+    print(f"An error occurred while processing your request: {str(e)}")
 
 client.close()
 

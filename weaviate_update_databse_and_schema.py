@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import json
 import time
 import weaviate
-from weaviate.classes.config import Property, DataType
+from weaviate.classes.config import Property, DataType, Configure
 from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 from weaviate.util import generate_uuid5
 
@@ -19,11 +19,18 @@ sheet = gc.open('Go Shop Vector Database')  # Replace with your sheet name
 worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
 WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
+# Open AI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+headers = {
+    "X-OpenAI-Api-Key": openai_key,
+}
+
 # Connect to Weaviate
 client = weaviate.connect_to_weaviate_cloud(
     cluster_url="https://pxplk2lvsey4xwtvdu1jeg.c0.us-east1.gcp.weaviate.cloud",
     auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+    headers=headers
 )
 
 # Test connection
@@ -65,7 +72,7 @@ def fetch_google_sheets_data():
     return [transform_row(row) for _, row in df.iterrows()]
 
 def update_weaviate_schema(data):
-    collection_exists = client.collections.exists(collection_name)
+    collection_exists = client.collections.list_all()
     if collection_exists:
         print(f"Collection '{collection_name}' found. Checking for schema updates...")
         collection = client.collections.get(collection_name)
@@ -84,13 +91,21 @@ def update_weaviate_schema(data):
 
     else:
         print(f"Collection '{collection_name}' not found. Creating it...")
+        
+        # Define properties for the collection
         properties = [
             Property(name=key, data_type=(DataType.TEXT_ARRAY if isinstance(value, list)
                                           else DataType.NUMBER if isinstance(value, (int, float))
                                           else DataType.TEXT))
             for key, value in data[0].items()
         ]
-        client.collections.create(collection_name, properties=properties)
+
+        # Create the collection with the OpenAI vectorizer
+        client.collections.create(
+            collection_name,
+            properties=properties,
+            vectorizer_config=Configure.Vectorizer.text2vec_openai()  # Specify the OpenAI vectorizer here
+        )
         print(f"Collection '{collection_name}' created successfully!")
 
 
