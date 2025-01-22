@@ -3,12 +3,47 @@ from .models import Item
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from .client import client
+from utils import process_message
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
 def index():
     return "Welcome to the Flask App!"
+
+@main.route('/chat', methods = ['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        user_message = data.get('message')
+
+        if not user_message:
+            return jsonify ({"error", "Message required"}), 400
+        
+        response = process_message(user_message, client)
+        return jsonify ({"response", response}), 200
+    except Exception as e:
+        return jsonify ({"error", str(e)}), 500
+
+def process_message(user_message, client):
+    collection_object = client.collections.get("Supplements")
+    try:
+        response = collection_object.query.near_text(
+            query = user_message,
+            limit=5
+        )
+
+        # Parse response
+        if response and response.objects:
+            result_strings = [
+                f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+                for obj in response.objects
+            ]
+            print("\n".join(result_strings))
+
+        print("No supplements found for your query. Please try a different category.")
+    except Exception as e:
+        print(f"An error occurred while processing your request: {str(e)}")
 
 
 @main.route('/items', methods=['GET'])
@@ -41,6 +76,7 @@ def get_items():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @main.route('/items', methods=['POST'])
 def add_item():

@@ -3,11 +3,17 @@ import weaviate
 from weaviate.classes.init import Auth
 
 FLASK_ENV = os.getenv("FLASK_ENV", "development")
+# Open AI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+headers = {
+    "X-OpenAI-Api-Key": openai_key,
+}
 
 if FLASK_ENV == "production":
     client = weaviate.connect_to_weaviate_cloud(
         cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
         auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
+        headers=headers
     )
     print("Connected to Weaviate Cloud.")
 elif FLASK_ENV in ["development", "testing"]:

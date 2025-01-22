@@ -2,6 +2,8 @@ import unittest
 from flask import Flask
 from app import create_app, db
 from config import TestingConfig
+from unittest.mock import patch
+from app.routes import process_message
 
 class FlaskRoutesTestCase(unittest.TestCase):
     def setUp(self):
@@ -26,6 +28,43 @@ class FlaskRoutesTestCase(unittest.TestCase):
     def tearDown(self):
         with self.app.app_context():
             db.drop_all()  # Clean up the database after tests
+
+    # TEST CHAT LOCALLY
+    @patch("app.routes.collection_object.query.near_text")
+    def test_chat_route(self, mock_query):
+        """
+        Test the /chat endpoint with a mock query.
+        """
+        # Simulated response from the database
+        mock_query.return_value = [
+            {"nombre": "Melatonina", "descripcion": "Ayuda para dormir", "precio": 12.99},
+            {"nombre": "Valeriana", "descripcion": "Calma y relajación", "precio": 9.99}
+        ]
+
+        # Prepare the request payload
+        payload = {"message": "Ayuda para dormir"}
+        response = self.client.post('/chat', json=payload)
+
+        # Verify the response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("response", response.json)
+        self.assertIn("Melatonina", response.json["response"])
+        self.assertIn("Valeriana", response.json["response"])
+
+    def test_process_message(self):
+        """
+        Test the process_message function directly.
+        """
+        with patch("app.routes.collection_object.query.near_text") as mock_query:
+            # Simulated database response
+            mock_query.return_value = [
+                {"nombre": "Melatonina", "descripcion": "Ayuda para dormir", "precio": 12.99},
+                {"nombre": "Valeriana", "descripcion": "Calma y relajación", "precio": 9.99}
+            ]
+            user_message = "Ayuda para dormir"
+            response = process_message(user_message, collection_object=None)
+            self.assertIn("Melatonina - Ayuda para dormir", response)
+            self.assertIn("Valeriana - Calma y relajación", response)
 
     # TEST GET ITEM
     def test_get_item_by_name(self):
