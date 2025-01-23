@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from .models import Item
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from .client import client
