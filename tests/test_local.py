@@ -1,6 +1,6 @@
 import unittest
 from flask import Flask
-from app import create_app, db
+from app import create_app
 from config import TestingConfig
 from unittest.mock import patch
 from app.routes import process_message
