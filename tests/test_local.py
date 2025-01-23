@@ -7,10 +7,9 @@ from app.routes import process_message
 
 class FlaskRoutesTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app(config_class=TestingConfig)
+        # Initialize the app with the testing configuration
+        self.app = create_app("testing")  # Ensure "testing" configuration doesn't require a database
         self.client = self.app.test_client()
-        with self.app.app_context():
-            db.create_all()
 
         self.test_item = {
             "nombre": "Test Item",
@@ -26,8 +25,7 @@ class FlaskRoutesTestCase(unittest.TestCase):
         }
 
     def tearDown(self):
-        with self.app.app_context():
-            db.drop_all()  # Clean up the database after tests
+        pass
 
     # TEST CHAT LOCALLY
     @patch("app.routes.collection_object.query.near_text")
