@@ -3,6 +3,7 @@ from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from .client import client
 from utils import process_message
+from app.client import client, collection
 
 main = Blueprint('main', __name__)
 
@@ -19,30 +20,28 @@ def chat():
         if not user_message:
             return jsonify ({"error", "Message required"}), 400
         
-        response = process_message(user_message, client)
+        response = process_message(user_message, collection)
+
         return jsonify ({"response", response}), 200
     except Exception as e:
         return jsonify ({"error", str(e)}), 500
 
-def process_message(user_message, client):
-    collection_object = client.collections.get("Supplements")
+def process_message(user_message, collection):
     try:
-        response = collection_object.query.near_text(
-            query = user_message,
+        response = collection.query.near_text(
+            query=user_message,
             limit=5
         )
 
         # Parse response
         if response and response.objects:
-            result_strings = [
+            return [
                 f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
                 for obj in response.objects
             ]
-            print("\n".join(result_strings))
-
-        print("No supplements found for your query. Please try a different category.")
+        return "No supplements found for your query. Please try a different category."
     except Exception as e:
-        print(f"An error occurred while processing your request: {str(e)}")
+        return f"An error occurred while processing your request: {str(e)}"
 
 
 @main.route('/items', methods=['GET'])
@@ -55,7 +54,6 @@ def get_items():
     price = request.args.get('price')
 
     try:
-        collection = client.collections.get("Supplements")
 
         # Apply filters dynamically based on query parameters
         if name:
@@ -92,7 +90,6 @@ def add_item():
         
         # Generate UUID based on "nombre"
         object_uuid = generate_uuid5({"nombre": data["nombre"]})
-        collection = client.collections.get("Supplements")
 
         if collection.data.exists(object_uuid):
             return jsonify({"error": "Item already exists"}), 201
@@ -111,7 +108,6 @@ def update_item(name):
     """
     data = request.get_json()
     try:
-        collection = client.collections.get("Supplements")
 
         # Find the item using filtered name
         query = collection.query.fetch_objects(
@@ -137,7 +133,6 @@ def delete_item(name):
     Delete an item from Weaviate based on its 'nombre'.
     """
     try:
-        collection = client.collections.get("Supplements")
 
         # Find the item to delete
         query = collection.query.fetch_objects(

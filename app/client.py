@@ -16,6 +16,7 @@ if FLASK_ENV == "production":
         headers=headers
     )
     print("Connected to Weaviate Cloud.")
+    collection = client.collections.get("Supplements")
 elif FLASK_ENV in ["development", "testing"]:
     client = weaviate.connect_to_local(
     host="127.0.0.1",  # Use a string to specify the host
@@ -23,5 +24,6 @@ elif FLASK_ENV in ["development", "testing"]:
     grpc_port=50051,
 )
     print("Connected to Local Weaviate.")
+    collection = client.collections.get("Supplements")
 else:
     raise ValueError("Invalid FLASK_ENV. Please set it to 'production', 'development', or 'testing'.")
