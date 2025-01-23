@@ -12,9 +12,13 @@ def create_app(config_class=None):
         app.config.from_object(config_class)
 
     db.init_app(app)
-
+    # Skip database initialization if no URI is configured
+    if app.config.get("SQLALCHEMY_DATABASE_URI"):
+        db.init_app(app)
+    else:
+        print("No database configured. Skipping SQLAlchemy initialization.")
+    
     # Import and register blueprints
     from .routes import main
     app.register_blueprint(main)
-
     return app
