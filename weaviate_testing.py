@@ -26,7 +26,7 @@ headers = {
 }
 
 client = weaviate.connect_to_weaviate_cloud(
-    cluster_url="https://pxplk2lvsey4xwtvdu1jeg.c0.us-east1.gcp.weaviate.cloud",
+    cluster_url="https://pvneefcqqgxzyknxovrgq.c0.us-east1.gcp.weaviate.cloud",
     auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
     headers=headers
@@ -180,38 +180,38 @@ except Exception as e:
 #     print(f"Error deleting item: {e}")
 
 # Hardcode testing adding item, dupliate item logic, and missing fields logic.
-# test_item = {
-#             "nombre": "Test Item",
-#             "precio": 10.00,
-#             "inventario": 100,
-#             "categoria": "Test Category",
-#             "descripcion": "This is a test item.",
-#             "ingredientes": ["Test Ingredient"],
-#             "allergens": ["None"],
-#             "usage": "Test usage instructions.",
-#             "recommended_for": ["Test Use"],
-#             "link": "https://example.com/test-item"
-#         }
+test_item = {
+            "nombre": "Test Item",
+            "precio": 10.00,
+            "inventario": 100,
+            "categoria": "Test Category",
+            "descripcion": "This is a test item.",
+            "ingredientes": ["Test Ingredient"],
+            "allergens": ["None"],
+            "usage": "Test usage instructions.",
+            "recommended_for": ["Test Use"],
+            "link": "https://example.com/test-item"
+        }
 
-# try:
-#     required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
-#     missing_fields = [item for item in required_fields if item not in test_item]
+try:
+    required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
+    missing_fields = [item for item in required_fields if item not in test_item]
 
-#     if missing_fields:
-#         print(f"Some fields are missing: {missing_fields}")
+    if missing_fields:
+        print(f"Some fields are missing: {missing_fields}")
     
-#     # Generate UUID based on "nombre"
-#     object_uuid = generate_uuid5({"nombre": test_item["nombre"]})
-#     collection = client.collections.get("Supplements")
+    # Generate UUID based on "nombre"
+    object_uuid = generate_uuid5({"nombre": test_item["nombre"]})
+    collection = client.collections.get("Supplements")
 
-#     if collection.data.exists(object_uuid):
-#         print("Item already exists!")
+    if collection.data.exists(object_uuid):
+        print("Item already exists!")
     
-#     collection.data.insert(test_item, uuid=object_uuid)
-#     print('Item added Succesfully')
+    collection.data.insert(test_item, uuid=object_uuid)
+    print('Item added Succesfully')
 
-# except Exception as e:
-#     print(f"Error found: {e}")
+except Exception as e:
+    print(f"Error found: {e}")
 
 # Hardcode testing updating item
 # name = "Test Item"
@@ -284,25 +284,25 @@ except Exception as e:
 #     client.close()
 #     print("Connection closed.")
 
-# FIRST SCENARIO TESTING
+# FIRST SCENARIO TEST
 
-try:
-    response = collection.query.near_text(
-        query = "Con Vitamina D3",
-        limit=5
-    )
+# try:
+#     response = collection.query.near_text(
+#         query = "Con Vitamina D3",
+#         limit=5
+#     )
 
-    # Parse response
-    if response and response.objects:
-        result_strings = [
-            f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
-            for obj in response.objects
-        ]
-        print("\n".join(result_strings))
+#     # Parse response
+#     if response and response.objects:
+#         result_strings = [
+#             f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+#             for obj in response.objects
+#         ]
+#         print("\n".join(result_strings))
 
-    print("No supplements found for your query. Please try a different category.")
-except Exception as e:
-    print(f"An error occurred while processing your request: {str(e)}")
+#     print("No supplements found for your query. Please try a different category.")
+# except Exception as e:
+#     print(f"An error occurred while processing your request: {str(e)}")
 
 client.close()
 

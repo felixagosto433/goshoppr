@@ -2,7 +2,7 @@ import unittest
 import requests
 
 class ProductionRoutesTestCase(unittest.TestCase):
-    BASE_URL = "https://vast-escarpment-05453-5a02b964d113.herokuapp.com/" 
+    BASE_URL = "https://git.heroku.com/staging-goshoppr.git" 
 
     def setUp(self):
         self.test_item = {
