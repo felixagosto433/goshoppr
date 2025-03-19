@@ -1,5 +1,10 @@
+from dotenv import load_dotenv
+import os
 import unittest
 import requests
+
+# Load the .env.staging file
+load_dotenv(".env.staging")
 
 class StagingRoutesTestCase(unittest.TestCase):
     BASE_URL = "https://staging-goshoppr-bcf178c9dd3f.herokuapp.com/"
@@ -42,6 +47,7 @@ class StagingRoutesTestCase(unittest.TestCase):
         print("test_add_item_with_missing_fields")
         print("DEBUG: Response Status Code:", response.status_code)
         print("DEBUG: Response Text:", response.text)
+        print("DEBUG: Response JSON:", response.json())
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
