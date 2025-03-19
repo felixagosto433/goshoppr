@@ -1,11 +1,11 @@
 import unittest
 import requests
 
-class ProductionRoutesTestCase(unittest.TestCase):
-    BASE_URL = "https://vast-escarpment-05453-5a02b964d113.herokuapp.com/" 
+class StagingRoutesTestCase(unittest.TestCase):
+    BASE_URL = "https://staging-goshoppr-bcf178c9dd3f.herokuapp.com/"
 
     def setUp(self):
-        self.test_item = {
+        self.item = {
             "nombre": "Test Item",
             "precio": 10.99,
             "inventario": 100,
@@ -17,22 +17,16 @@ class ProductionRoutesTestCase(unittest.TestCase):
             "recommended_for": ["Test Use"],
             "link": "https://example.com/test-item"
         }
-        
+
     def test_chat_route(self):
-        """
-        Test the /chat endpoint with a valid message.
-        """
         payload = {"message": "Ayuda para dormir"}
-        # Posts the payload in the chat endpoint
         response = requests.post(f"{self.BASE_URL}/chat", json=payload)
         print("test_chat_route")
         print("DEBUG: Response Status Code:", response.status_code)
         print("DEBUG: Response Text:", response.text)
 
         self.assertEqual(response.status_code, 200)
-        # Checks if there is a response in the json object
         self.assertIn("response", response.json())
-        # Checks if object is not empty (Length of object > 0)
         self.assertTrue(len(response.json()["response"]) > 0)
 
     def test_get_item_by_name(self):
@@ -43,33 +37,31 @@ class ProductionRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_add_item_with_missing_fields(self):
-        incomplete_item = {"nombre": "Incomplete Item", "precio": 5.99}
+        incomplete_item = {"nombre": "Item incompleto", "precio": "12.99"}
         response = requests.post(f"{self.BASE_URL}/items", json=incomplete_item)
-
-        # Print entire response for debuging purposes
         print("test_add_item_with_missing_fields")
         print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)  # Print full response
+        print("DEBUG: Response Text:", response.text)
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
 
     def test_update_item(self):
         # Add the test item first
-        requests.post(f"{self.BASE_URL}/items", json=self.test_item)
-
-        # Update the test item
-        updated_data = {"precio": 12.99}
-        response = requests.put(f"{self.BASE_URL}/items/Test Item", json=updated_data)
-        print("test_update_item")
-        print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)  # Print full response
+        requests.post(f"{self.BASE_URL}/items", json = self.item)
+        # Update the existing field
+        response = requests.put(f"{self.BASE_URL}/items/Test Item", json={"precio": 12.99})
         self.assertEqual(response.status_code, 200)
+        print("test_update_item")
+        print("DEBUG: Response Status Code after updating:", response.status_code)
+        print("DEBUG: Response Text:", response.text)
 
         # Verify the update
-        response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})
-        print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)  # Print full response
+        response = requests.get(f"{self.BASE_URL}/items/Test Item", params={"name": "Test Item"})
+
+        print("DEBUG: Response Status Code verification:", response.status_code)
+        print("DEBUG: Response Text:", response.text)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]["precio"], 12.99)
 
@@ -77,7 +69,8 @@ class ProductionRoutesTestCase(unittest.TestCase):
         response = requests.delete(f"{self.BASE_URL}/items/Test Item")
         print("test_delete_item")
         print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)  # Print full response
+        print("DEBUG: Response Text:", response.text)
+
         self.assertEqual(response.status_code, 200)
         self.assertIn("message", response.json())
         self.assertEqual(response.json()["message"], "Item deleted successfully!")
@@ -86,7 +79,8 @@ class ProductionRoutesTestCase(unittest.TestCase):
         response = requests.delete(f"{self.BASE_URL}/items/NonExistingItem")
         print("test_delete_non_existing_item")
         print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)  # Print full response
+        print("DEBUG: Response Text:", response.text)
+
         self.assertEqual(response.status_code, 404)
         self.assertIn("error", response.json())
 
