@@ -20,30 +20,46 @@ headers = {
 print(f"Passed Open Ai {headers}")
 heroku_app_name = os.getenv("HEROKU_APP_NAME")
 
-if heroku_app_name == "vast-escarpment-05453":
-    client = weaviate.connect_to_weaviate_cloud(
-        cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
-        auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
-        headers=headers
-    )
-    print("✅ Connected to Weaviate Production Cloud.")
-    collection = client.collections.get("Supplements")
-
-elif heroku_app_name == "staging-goshoppr":
-    client = weaviate.connect_to_weaviate_cloud(
-        cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
-        auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
-        headers=headers
-    )
-    print("✅ Connected to Weaviate Staging Cloud.")
-    collection = client.collections.get("Supplements")
-else:
-    raise ValueError("Invalid Variables")
-
-# Reconnect function for tests
-def reconnect_weaviate():
+def get_weaviate_client():
+    """Ensures the client is persistent"""
     global client
-    if not client.is_connected():
+    if client is None or not client.is_connected():
         print("🔄 Reconnecting to Weaviate...")
-        client.connect()
-        print("✅ Weaviate Reconnected")
+        cluster_url = os.getenv("WEAVIATE_CLOUD_URL")
+        auth_key = os.getenv("WEAVIATE_ADMIN_KEY")
+
+        client = weaviate.connect_to_weaviate_cloud(
+            cluster_url=cluster_url,
+            auth_credentials=Auth.api_key(auth_key),
+            headers=headers
+        )
+        print("✅ Connected to Weaviate Successfully!")
+    return client
+
+# if heroku_app_name == "vast-escarpment-05453":
+#     client = weaviate.connect_to_weaviate_cloud(
+#         cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
+#         auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
+#         headers=headers
+#     )
+#     print("✅ Connected to Weaviate Production Cloud.")
+#     collection = client.collections.get("Supplements")
+
+# elif heroku_app_name == "staging-goshoppr":
+#     client = weaviate.connect_to_weaviate_cloud(
+#         cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
+#         auth_credentials=Auth.api_key(os.getenv("WEAVIATE_ADMIN_KEY")),
+#         headers=headers
+#     )
+#     print("✅ Connected to Weaviate Staging Cloud.")
+#     collection = client.collections.get("Supplements")
+# else:
+#     raise ValueError("Invalid Variables")
+
+# # Reconnect function for tests
+# def reconnect_weaviate():
+#     global client
+#     if not client.is_connected():
+#         print("🔄 Reconnecting to Weaviate...")
+#         client.connect()
+#         print("✅ Weaviate Reconnected")
