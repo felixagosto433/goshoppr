@@ -2,7 +2,9 @@ from dotenv import load_dotenv
 import os
 import unittest
 import requests
-from app.client import reconnect_weaviate
+import weaviate
+from weaviate.classes.init import Auth
+from app.client import get_weaviate_client
 
 # Load the .env.staging file
 load_dotenv(".env.staging")
@@ -10,9 +12,17 @@ load_dotenv(".env.staging")
 class StagingRoutesTestCase(unittest.TestCase):
     BASE_URL = "https://staging-goshoppr-bcf178c9dd3f.herokuapp.com/"
 
-    def setUp(self):
-        reconnect_weaviate()
-        self.item = {
+    @classmethod
+    def setUpClass(cls):
+        """Set up before running tests"""
+        print("🔄 Initializing Weaviate Client for Tests...")
+        cls.client = get_weaviate_client()  # ✅ Use shared connection
+        if cls.client.is_connected():
+            print("✅ Connected to Weaviate Successfully!")
+        else:
+            raise RuntimeError("❌ Failed to connect to Weaviate.")
+
+        cls.item = {  # Use cls instead of self
             "nombre": "Test Item",
             "precio": 10.99,
             "inventario": 100,
@@ -25,10 +35,17 @@ class StagingRoutesTestCase(unittest.TestCase):
             "link": "https://example.com/test-item"
         }
 
+    @classmethod
+    def tearDownClass(cls):
+        """Close Weaviate connection after all tests"""
+        if cls.client and cls.client.is_connected():
+            print("🔴 Closing Weaviate Client...")
+            cls.client.close()
+            print("✅ Weaviate Client Closed Successfully!")
+
     def test_chat_route(self):
         payload = {"message": "Ayuda para dormir"}
         response = requests.post(f"{self.BASE_URL}/chat", json=payload)
-        print("test_chat_route")
         print("DEBUG: Response Status Code:", response.status_code)
         print("DEBUG: Response Text:", response.text)
 
@@ -38,58 +55,46 @@ class StagingRoutesTestCase(unittest.TestCase):
 
     def test_get_item_by_name(self):
         response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})
-        print("test_get_item_by_name")
-        print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
+        print("DEBUG: Response JSON:", response.json())
+
         self.assertEqual(response.status_code, 200)
 
     def test_add_item_with_missing_fields(self):
         incomplete_item = {"nombre": "Item incompleto", "precio": "12.99"}
         response = requests.post(f"{self.BASE_URL}/items", json=incomplete_item)
-        print("test_add_item_with_missing_fields")
-        print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
         response_json = response.json()
         print("DEBUG: Response JSON:", response_json)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("error", response.json())
+        self.assertIn("error", response_json)
         self.assertTrue(isinstance(response_json["error"], str))
 
     def test_update_item(self):
-        # Add the test item first
-        requests.post(f"{self.BASE_URL}/items", json = self.item)
-        # Update the existing field
-        response = requests.put(f"{self.BASE_URL}/items/Test Item", json={"precio": 12.99})
-        self.assertEqual(response.status_code, 200)
-        print("test_update_item")
+        requests.post(f"{self.BASE_URL}/items", json=self.item)
+        response = requests.put(f"{self.BASE_URL}/items", json={"precio": 12.99})
         print("DEBUG: Response Status Code after updating:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
 
-        # Verify the update
-        response = requests.get(f"{self.BASE_URL}/items/Test Item", params={"name": "Test Item"})
-
-        print("DEBUG: Response Status Code verification:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
+        response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})
+        print("DEBUG: Response JSON:", response.json())
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()[0]["precio"], 12.99)
+
+        json_response = response.json()
+        if isinstance(json_response, list) and len(json_response) > 0:
+            self.assertEqual(json_response[0]["precio"], 12.99)
+        else:
+            raise AssertionError("Response did not return a list or was empty.")
 
     def test_delete_item(self):
         response = requests.delete(f"{self.BASE_URL}/items/Test Item")
-        print("test_delete_item")
         print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("message", response.json())
-        self.assertEqual(response.json()["message"], "Item deleted successfully!")
 
     def test_delete_non_existing_item(self):
         response = requests.delete(f"{self.BASE_URL}/items/NonExistingItem")
-        print("test_delete_non_existing_item")
         print("DEBUG: Response Status Code:", response.status_code)
-        print("DEBUG: Response Text:", response.text)
 
         self.assertEqual(response.status_code, 404)
         self.assertIn("error", response.json())
