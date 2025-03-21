@@ -20,21 +20,25 @@ headers = {
 print(f"Passed Open Ai {headers}")
 heroku_app_name = os.getenv("HEROKU_APP_NAME")
 
+# Store Weaviate client globally
+_client_instance = None
+
+
 def get_weaviate_client():
     """Ensures the client is persistent"""
-    global client
-    if client is None or not client.is_connected():
+    global _client_instance
+    if _client_instance is None or not _client_instance.is_connected():
         print("🔄 Reconnecting to Weaviate...")
-        cluster_url = os.getenv("WEAVIATE_CLOUD_URL")
-        auth_key = os.getenv("WEAVIATE_ADMIN_KEY")
+        cluster_url = os.getenv("WEAVIATE_CLOUD_URL") if heroku_app_name == "vast-escarpment-05453" else os.getenv("STAGING_WEAVIATE_CLOUD_URL")
+        auth_key = os.getenv("WEAVIATE_ADMIN_KEY") if heroku_app_name == "vast-escarpment-05453" else os.getenv("STAGING_WEAVIATE_ADMIN_KEY")
 
-        client = weaviate.connect_to_weaviate_cloud(
+        _client_instance = weaviate.connect_to_weaviate_cloud(
             cluster_url=cluster_url,
             auth_credentials=Auth.api_key(auth_key),
             headers=headers
         )
         print("✅ Connected to Weaviate Successfully!")
-    return client
+    return _client_instance
 
 # if heroku_app_name == "vast-escarpment-05453":
 #     client = weaviate.connect_to_weaviate_cloud(

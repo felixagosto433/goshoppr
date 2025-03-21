@@ -42,6 +42,7 @@ class StagingRoutesTestCase(unittest.TestCase):
             print("🔴 Closing Weaviate Client...")
             cls.client.close()
             print("✅ Weaviate Client Closed Successfully!")
+            
 
     def test_chat_route(self):
         payload = {"message": "Ayuda para dormir"}
