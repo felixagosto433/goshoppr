@@ -1,13 +1,23 @@
 import os
 import weaviate
 from weaviate.classes.init import Auth
+from dotenv import load_dotenv
+import os
+
+# Load .env.staging manually
+load_dotenv(".env.staging")
+
+# Debugging: Check if environment variable is loaded
+print("DEBUG: HEROKU_APP_NAME =", os.getenv("HEROKU_APP_NAME"))
+print("DEBUG: WEAVIATE_ADMIN_KEY =", os.getenv("WEAVIATE_ADMIN_KEY"))
+print("DEBUG: WEAVIATE_CLOUD_URL =", os.getenv("WEAVIATE_CLOUD_URL"))
 
 # Open AI authentication
 openai_key = os.getenv("OPENAI_APIKEY")
 headers = {
     "X-OpenAI-Api-Key": openai_key,
 }
-
+print(f"Passed Open Ai {headers}")
 heroku_app_name = os.getenv("HEROKU_APP_NAME")
 
 if heroku_app_name == "vast-escarpment-05453":
@@ -28,7 +38,7 @@ elif heroku_app_name == "staging-goshoppr":
     print("✅ Connected to Weaviate Staging Cloud.")
     collection = client.collections.get("Supplements")
 else:
-    raise ValueError("Invalid FLASK_ENV. Please set it to 'production', 'development', or 'testing'.")
+    raise ValueError("Invalid Variables")
 
 # Reconnect function for tests
 def reconnect_weaviate():
