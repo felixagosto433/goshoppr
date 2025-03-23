@@ -8,6 +8,8 @@ from weaviate.classes.init import Auth
 openai_key = os.getenv("OPENAI_APIKEY")
 headers = {"X-OpenAI-Api-Key": openai_key}
 
+print(f"Open AI Key: {headers}")
+
 # Global cached client
 _client_instance = None
 
@@ -21,7 +23,7 @@ def get_weaviate_client():
         print("🔄 Connecting to Weaviate...")
         cluster_url = os.getenv("WEAVIATE_CLOUD_URL")
         api_key = os.getenv("WEAVIATE_ADMIN_KEY")
-        
+
         # Connect client
         _client_instance = weaviate.connect_to_weaviate_cloud(
             cluster_url=cluster_url,
