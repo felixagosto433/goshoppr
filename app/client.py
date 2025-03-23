@@ -3,6 +3,9 @@
 import os
 import weaviate
 from weaviate.classes.init import Auth
+from dotenv import load_dotenv
+
+load_dotenv(".env.staging")
 
 # OpenAI authentication
 openai_key = os.getenv("OPENAI_APIKEY")
