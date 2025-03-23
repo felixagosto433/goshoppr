@@ -12,17 +12,9 @@ load_dotenv(".env.staging")
 class StagingRoutesTestCase(unittest.TestCase):
     BASE_URL = "https://staging-goshoppr-bcf178c9dd3f.herokuapp.com/"
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up before running tests"""
-        print("🔄 Initializing Weaviate Client for Tests...")
-        cls.client = get_weaviate_client()  # ✅ Use shared connection
-        if cls.client.is_connected():
-            print("✅ Connected to Weaviate Successfully!")
-        else:
-            raise RuntimeError("❌ Failed to connect to Weaviate.")
-
-        cls.item = {  # Use cls instead of self
+    def setUp(self):
+        self.client = get_weaviate_client()
+        self.item = {  
             "nombre": "Test Item",
             "precio": 10.99,
             "inventario": 100,
@@ -35,13 +27,10 @@ class StagingRoutesTestCase(unittest.TestCase):
             "link": "https://example.com/test-item"
         }
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         """Close Weaviate connection after all tests"""
-        if cls.client and cls.client.is_connected():
-            print("🔴 Closing Weaviate Client...")
-            cls.client.close()
-            print("✅ Weaviate Client Closed Successfully!")
+        if self.client.is_connected():
+            self.client.close()
             
 
     def test_chat_route(self):
