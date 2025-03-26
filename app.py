@@ -1,6 +1,8 @@
-from app import create_app
+from flask import Flask
 from flask_cors import CORS
 
-# Initialize Flask app
-app = create_app()  # Ensure this works with Gunicorn
-CORS(app, origins=["https://bananos.mybigcommerce.com"])  # Enable cross-origin requests
+app = Flask(__name__)
+CORS(app, origins=["https://bananos.mybigcommerce.com"])
+
+from app.routes import main
+app.register_blueprint(main)
