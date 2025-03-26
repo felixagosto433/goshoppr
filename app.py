@@ -3,4 +3,4 @@ from flask_cors import CORS
 
 # Initialize Flask app
 app = create_app()  # Ensure this works with Gunicorn
-CORS(app)  # Enable cross-origin requests
+CORS(app, origins=["https://bananos.mybigcommerce.com"])  # Enable cross-origin requests

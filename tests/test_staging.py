@@ -4,7 +4,10 @@ import unittest
 import requests
 import weaviate
 from weaviate.classes.init import Auth
+from weaviate.classes.config import Configure, Property, DataType
+from weaviate.classes.query import Filter
 from app.client import get_weaviate_client
+import json
 
 # Load the .env.staging file
 load_dotenv(".env.staging")
@@ -27,6 +30,55 @@ class StagingRoutesTestCase(unittest.TestCase):
             "link": "https://example.com/test-item"
         }
 
+        try:
+
+            client = get_weaviate_client()
+            # Check if the "Supplements" collection exists
+            collections = client.collections.list_all()
+            print(f"Existing collections: {collections.keys()}") 
+
+            if "Supplements" in collections:
+                print("Collection 'Supplements' already exists...")
+            else:
+                print("No Collection found")
+                print("Creating 'Supplements' collection...")
+                client.collections.create(
+                    "Supplements",
+                    vectorizer_config=Configure.Vectorizer.text2vec_openai(),
+                    properties=[
+                Property(name="nombre", data_type=DataType.TEXT),
+                Property(name="categoria", data_type=DataType.TEXT),
+                Property(name="descripcion", data_type=DataType.TEXT),
+                Property(name="ingredientes", data_type=DataType.TEXT_ARRAY),
+                Property(name="usage", data_type=DataType.TEXT, vectorizer_config={"skip": True}),
+                Property(name="precio", data_type=DataType.NUMBER, vectorizer_config={"skip": True}),
+                Property(name="inventario", data_type=DataType.NUMBER, vectorizer_config={"skip": True}),
+                Property(name="link", data_type=DataType.TEXT, vectorizer_config={"skip": True}),
+            ],
+                )
+                print("Collection created successfully!!!")
+
+            # Load the collection
+            supplements_collection = client.collections.get("Supplements")
+
+            existing_data = supplements_collection.query.fetch_objects(limit=1)
+            if not existing_data.objects:
+                print("Populating 'Supplements' with vitaminas.json...")
+                with open("vitaminas.json", "r", encoding="utf-8") as file:
+                    data = json.load(file)
+
+                for obj in data:
+                    supplements_collection.data.insert(obj)
+                    print(f"Inserted object {obj['nombre']}")
+
+                print("Data imported successfully!")
+            else:
+                print("Collection already has data.")
+
+        except Exception as e:
+            print(f"The following error occurred: {e}")
+
+        
     def tearDown(self):
         """Close Weaviate connection after all tests"""
         if self.client.is_connected():
@@ -60,8 +112,14 @@ class StagingRoutesTestCase(unittest.TestCase):
         self.assertTrue(isinstance(response_json["error"], str))
 
     def test_update_item(self):
-        requests.post(f"{self.BASE_URL}/items", json=self.item)
-        response = requests.put(f"{self.BASE_URL}/items", json={"precio": 12.99})
+        # Checking if the Test Item already exists. 
+        response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})
+        if response.status_code == 200 and response.json():
+            print("Item already exists! Continuing with test...")
+        else:
+            requests.post(f"{self.BASE_URL}/items", json=self.item)
+            
+        response = requests.put(f"{self.BASE_URL}/items/Test Item", json={"precio": 12.99})
         print("DEBUG: Response Status Code after updating:", response.status_code)
 
         response = requests.get(f"{self.BASE_URL}/items", params={"name": "Test Item"})
