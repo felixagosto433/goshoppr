@@ -7,6 +7,8 @@ from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from flask import request
 from weaviate.classes.init import AdditionalConfig, Timeout, Auth
+from weaviate.classes.config import Property, DataType, Configure
+import json
 
 # Connecting to local.
 # client = weaviate.connect_to_local()
@@ -16,18 +18,17 @@ from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 #     time.sleep(30)
 
 # Cloud connection. 
-load_dotenv()
+load_dotenv(".env.staging")
 WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
 # Open AI authentication
 openai_key = os.getenv("OPENAI_APIKEY")
-headers = {
-    "X-OpenAI-Api-Key": openai_key,
-}
+api_key = os.getenv("WEAVIATE_ADMIN_KEY")
+headers = {"X-OpenAI-Api-Key": openai_key}
 
 client = weaviate.connect_to_weaviate_cloud(
     cluster_url="https://hgassth0ruwsy8cpspbxag.c0.europe-west3.gcp.weaviate.cloud",
-    auth_credentials="JiC4qCozGt9EONQ5fSdwX6pAq6GWBhgvfpOq",
+    auth_credentials=Auth.api_key(api_key),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
     headers=headers
 )
@@ -264,8 +265,8 @@ except Exception as e:
 
 # DELETE A COLLECTION
 
-# client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
-# print("Collection succesfully deleted")
+client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
+print("Collection succesfully deleted")
 
 # Deleting each item in the weaviate db by id
 # try:
