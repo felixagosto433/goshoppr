@@ -1,9 +1,13 @@
 from flask import Flask
 from .routes import main
-from .client import get_weaviate_client  # ✅ import the function, not a global client
+from .client import get_weaviate_client 
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
+    
+    CORS(app, origins=["https://bananos.mybigcommerce.com"])
+
     app.register_blueprint(main)
 
     # Initialize the client and attach it to the app
