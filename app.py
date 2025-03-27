@@ -1,8 +1,7 @@
-from flask import Flask
+from app import create_app
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = create_app()
+print("✅ App created with blueprint + weaviate")
 CORS(app, origins=["https://bananos.mybigcommerce.com"])
 
-from app.routes import main
-app.register_blueprint(main)
