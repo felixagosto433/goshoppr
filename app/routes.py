@@ -8,8 +8,11 @@ main = Blueprint('main', __name__)
 def index():
     return "Welcome to the Flask App!"
 
-@main.route('/chat', methods=['POST'])
+@main.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
+    if request.method == 'OPTIONS':
+        return '', 204  # ✅ early exit for CORS preflight
+
     try:
         data = request.get_json()
         user_message = data.get('message')
@@ -37,6 +40,7 @@ def chat():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @main.route('/items', methods=['GET'])
 def get_items():
