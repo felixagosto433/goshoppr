@@ -5,15 +5,17 @@ from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
-    
-    CORS(app, origins=["https://bananos.mybigcommerce.com"])
+
+    # 🔧 Apply full CORS config
+    CORS(app, resources={r"/*": {"origins": "https://bananos.mybigcommerce.com"}}, 
+         methods=["GET", "POST", "OPTIONS"],
+         allow_headers=["Content-Type"])
 
     app.register_blueprint(main)
-
-    # Initialize the client and attach it to the app
-    app.weaviate_client = get_weaviate_client()  # ✅ safe to call here
+    app.weaviate_client = get_weaviate_client()
 
     return app
+
 
 # from flask import Flask
 # from flask_sqlalchemy import SQLAlchemy
