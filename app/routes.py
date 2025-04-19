@@ -14,31 +14,41 @@ def chat():
         return '', 204  # ✅ early exit for CORS preflight
 
     try:
+        print("🟡 /chat endpoint hit")
+
         data = request.get_json()
+        print("📨 Request JSON:", data)
+
         user_message = data.get('message')
+        print("🧠 User message:", user_message)
 
         if not user_message:
             return jsonify({"error": "Message required"}), 400
 
         client = current_app.weaviate_client
+        print("🔌 Got weaviate client")
+
         collection = client.collections.get("Supplements")
+        print("📦 Got Supplements collection")
 
         response = collection.query.near_text(
             query=user_message,
             limit=5
         )
+        print("🧬 Weaviate response:", response)
 
         if response and response.objects:
-            return jsonify({
-                "response": [
-                    f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
-                    for obj in response.objects
-                ]
-            }), 200
+            reply = [
+                f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+                for obj in response.objects
+            ]
+            print("✅ Response:", reply)
+            return jsonify({"response": reply}), 200
 
         return jsonify({"response": "No supplements found for your query. Please try a different category."}), 200
 
     except Exception as e:
+        print("🔥 ERROR in /chat:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
