@@ -42,7 +42,7 @@ def chat():
                 f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
                 for obj in response.objects
             ]
-            print("✅ Response:", reply)
+            print("✅ Reply:", reply)
             return jsonify({"response": reply}), 200
 
         return jsonify({"response": "No supplements found for your query. Please try a different category."}), 200
