@@ -15,7 +15,7 @@ api_key = os.getenv("WEAVIATE_ADMIN_KEY")
 headers = {"X-OpenAI-Api-Key": openai_key}
 
 client = weaviate.connect_to_weaviate_cloud(
-    cluster_url="coysuhe0qeohgaym2vt5pq.c0.europe-west3.gcp.weaviate.cloud",
+    cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
     auth_credentials=Auth.api_key(api_key),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
     headers=headers
