@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import json
 
-load_dotenv()
+load_dotenv(".env.google")
 
 SERVICE_KEY_PATH = os.getenv("SERVICE_KEY")
 print(SERVICE_KEY_PATH)
@@ -30,7 +30,8 @@ def transform_row(row):
         "ingredientes": row["ingredientes"].split(', '),  # Split ingredients into a list
         "allergens": row["allergens"].split(', '),  # Split allergens into a list
         "usage": row["usage"],
-        "recommended_for": row["recommended_for"].split(', ')  # Split recommendations into a list
+        "recommended_for": row["recommended_for"].split(', '),  # Split recommendations into a list
+        "link": row["link"]
     }
 
 # Apply the transformation
