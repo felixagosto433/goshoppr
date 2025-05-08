@@ -106,7 +106,7 @@ except Exception as e:
 #     client.close()
 #     print("Connection closed. Done.")
 
-# PRINT SCHEMA
+#PRINT SCHEMA
 # collection.config.update({
 #     "vectorizer": "text2vec-openai"  # You can use other vectorizers, depending on your setup.
 # })
@@ -116,7 +116,7 @@ except Exception as e:
 # print("SCHEMA")
 # print(collection)
 
-# PRINT ALL OBJECTS
+# # PRINT ALL OBJECTS
 # print("_________________________________________")
 # print("OBJECTS")
 # for item in collection.iterator():

@@ -39,10 +39,18 @@ def chat():
 
         if response and response.objects:
             reply = [
-                f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+                {
+                    "name": obj.properties.get("nombre"),
+                    "description": obj.properties.get("descripcion"),
+                    "price": obj.properties.get("precio"),
+                    "category": obj.properties.get("categoria"),
+                    "link": obj.properties.get("link"),
+                    "usage": obj.properties.get("usage"),
+                    "recommended_for": obj.properties.get("recommended_for"),
+                    "allergens": obj.properties.get("allergens")
+                }
                 for obj in response.objects
             ]
-            print("✅ Reply:", reply)
             return jsonify({"response": reply}), 200
 
         return jsonify({"response": "No supplements found for your query. Please try a different category."}), 200
