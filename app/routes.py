@@ -50,8 +50,9 @@ def chat():
                     "allergens": obj.properties.get("allergens")
                 }
                 for obj in response.objects
-            ]
-            return jsonify({"response": reply}), 200
+]
+return jsonify({"response": reply}), 200
+
 
         return jsonify({"response": "No supplements found for your query. Please try a different category."}), 200
 
