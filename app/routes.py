@@ -33,7 +33,7 @@ def chat():
 
         response = collection.query.near_text(
             query=user_message,
-            limit=5
+            limit=2
         )
         print("🧬 Weaviate response:", response)
 
