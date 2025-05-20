@@ -174,11 +174,16 @@ def chat():
 
         user_id = data.get("user_id", "anonymous")
 
+        print("🔁 User state before processing:", chat_state.get(user_id))
+
         logic_response = process_user_input(user_id, user_message)
+
+        print("🧠 Final bot response:", logic_response)
 
         return jsonify({
             "text": logic_response["text"],
-            "products": logic_response.get("products", [])
+            "products": logic_response.get("products", []),
+            "options": logic_response.get("options", [])
         }), 200
 
     except Exception as e:
