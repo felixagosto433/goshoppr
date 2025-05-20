@@ -49,5 +49,3 @@ def extract_concepts(user_message):
 
     # fallback: just return what the user typed as one concept
     return [user_message]
-
-client.close()
