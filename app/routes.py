@@ -1,8 +1,155 @@
 from flask import Blueprint, request, jsonify, current_app
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
+from utils import extract_concepts, query_weaviate
 
 main = Blueprint('main', __name__)
+
+# Temporary process user input logic:
+
+chat_state = {} 
+
+def process_user_input(user_id, user_message):
+    # Initialize user_state if new
+    if user_id not in chat_state:
+        chat_state[user_id] = {
+            "stage": "welcome",
+            "context": {}
+        }
+
+    # First naming of variables
+    state = chat_state[user_id]
+
+    stage = state["stage"]
+    ctx = state["context"]
+
+    # === Stage 1: Welcome ===
+    if stage =="welcome":
+        state["stage"] = "main_menu"
+        return {
+            "text": "¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
+            "options": [
+                "Ver productos recomendados",
+                "Obtener asesoramiento personalizado para vitaminas y suplementos",
+                "Resolver dudas sobre mis pedidos",
+                "Conocer promociones especiales"
+            ]
+        }
+    
+    # === Stage 2: Main Menu ===
+    if stage == "main_menu":
+        if "recomendados" in user_message.lower():
+            state["stage"] = "recommendation_category"
+            return {
+                "text": "Perfecto. ¿Qué estás buscando mejorar?",
+                "options": [
+                    "Energía y Vitalidad",
+                    "Sueño y Relajación",
+                    "Salud del Corazón",
+                    "Sistema Inmunológico",
+                    "Otro (especificar)"
+                ]
+            }
+        
+        elif "asesoramiento" in user_message.lower():
+            state["stage"] = "personal_advice"
+            return {
+                "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?" 
+            }
+        
+        elif "pedidos" in user_message.lower():
+            return {
+                "text": "¿En qué puedo ayudarte con tu pedido?",
+                "options": [
+                    "Estado de mi pedido",
+                    "Información de envío",
+                    "Devoluciones",
+                    "Métodos de pago"
+                ]
+            }
+        
+        elif "promociones" in user_message.lower():
+            return {
+                "text": "¡Excelente! ¿Te interesa recibir un cupón o ver productos en oferta?",
+                "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
+            }
+        
+        else:
+            return {
+                "text": "Lo siento, no entendí eso. ¿Puedes escoger una opción del menú?",
+                "options": [
+                    "Ver productos recomendados",
+                    "Obtener asesoramiento personalizado",
+                    "Resolver dudas sobre mis pedidos",
+                    "Conocer promociones especiales"
+                ]
+            }
+        
+    # === Stage 3: Category-Based Recommendation === 
+    if stage == "recommendation_category":
+        category_map = {
+            "energía": ["energía", "fatiga", "vitalidad"],
+            "sueño": ["sueño", "insomnia", "relajación"],
+            "corazón": ["immune system", "immunity", "defense"],
+            "otro": [] # fallback
+        }   
+
+        for key, val in category_map.items():
+            if key in user_message.lower(): # If one of the categories in my category map is in the users message
+                if val:
+                    results = query_weaviate(val)
+                    state["stage"] = "done"
+                    return {
+                        "text": f"Aquí tienes algunas recomendaciones para {key}:",
+                        "products": results
+                    }
+                else:
+                    state["stage"] = "custom_query"
+                    return {"text": "Por favor, especifica lo que necesitas mejorar."}
+                
+        return {
+            "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
+            "options": list(category_map.keys())
+        }
+    
+    # === Stage 4: Custom Query Handling ===
+    if stage == "custom_query":
+        concepts = extract_concepts(user_message.lower())
+        results = query_weaviate(concepts)
+        return {
+            "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
+            "products": results
+        }
+    
+    # === Stage 5: Personalized Advice Flow ===
+    if stage == "personal_advice":
+        ctx["health_goal"] = user_message
+        state["stage"] = "ask_medical"
+        return {
+            "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
+        }
+    
+    elif stage == "ask_medical":
+        ctx["medical"] = user_message
+        state["stage"] = "ask_preference"
+        return {
+            "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
+        }
+    
+    elif stage == "ask_preference":
+        ctx["preference"] = user_message
+        # Form a query
+        query_terms = [ctx["health_goal"], ctx["preference"]]
+        state["stage"] = "done"
+        return {
+            "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
+            "products": results
+        }
+    
+    # === Default / fallback ===
+    return {
+        "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
+    }
 
 @main.route('/')
 def index():
@@ -25,36 +172,14 @@ def chat():
         if not user_message:
             return jsonify({"error": "Message required"}), 400
 
-        client = current_app.weaviate_client
-        print("🔌 Got weaviate client")
+        user_id = data.get("user_id", "anonymous")
 
-        collection = client.collections.get("Supplements")
-        print("📦 Got Supplements collection")
+        logic_response = process_user_input(user_id, user_message)
 
-        response = collection.query.near_text(
-            query=user_message,
-            limit=2
-        )
-        print("🧬 Weaviate response:", response)
-
-        if response and response.objects:
-            reply = [
-                {
-                    "name": obj.properties.get("nombre"),
-                    "description": obj.properties.get("descripcion"),
-                    "price": obj.properties.get("precio"),
-                    "category": obj.properties.get("categoria"),
-                    "link": obj.properties.get("link"),
-                    "usage": obj.properties.get("usage"),
-                    "recommended_for": obj.properties.get("recommended_for"),
-                    "allergens": obj.properties.get("allergens")
-                }
-                for obj in response.objects
-            ]
-            return jsonify({"response": reply}), 200
-
-
-        return jsonify({"response": "No supplements found for your query. Please try a different category."}), 200
+        return jsonify({
+            "text": logic_response["text"],
+            "products": logic_response.get("products", [])
+        }), 200
 
     except Exception as e:
         print("🔥 ERROR in /chat:", str(e))
