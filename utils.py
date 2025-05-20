@@ -1,23 +1,53 @@
-from app.client import client
+from app.client import get_weaviate_client
 
-def process_message(user_message, client):
-    collection_object = client.collections.get("Supplements")
+def query_weaviate(concepts):
     try:
-        response = collection_object.query.near_text(
-            query = user_message,
-            limit=5
+        client = get_weaviate_client()
+        collection = client.collections.get("Supplements")
+        response = collection.query.near_text(
+            query = concepts,
+            limit = 5
         )
 
-        # Parse response
         if response and response.objects:
-            result_strings = [
-                f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+            return [
+                {
+                    "name": obj.properties.get("nombre"),
+                    "description": obj.properties.get("descripcion"),
+                    "price": obj.properties.get("precio"),
+                    "category": obj.properties.get("categoria"),
+                    "link": obj.properties.get("link"),
+                    "usage": obj.properties.get("usage"),
+                    "recommended_for": obj.properties.get("recommended_for"),
+                    "allergens": obj.properties.get("allergens")
+                }
                 for obj in response.objects
-            ]
-            print("\n".join(result_strings))
 
-        print("No supplements found for your query. Please try a different category.")
+            ]
+        
+        return [] # No objects found
+    
     except Exception as e:
-        print(f"An error occurred while processing your request: {str(e)}")
+        print(f"❌ Error in query_weaviate: {str(e)}")
+        return []
+
+def extract_concepts(user_message):
+    message = user_message.lower()
+
+    keyword_map = {
+        "sueño": ["sueño", "melatonina", "relajación", "dormir"],
+        "ansiedad": ["ansiedad", "estrés", "calmante", "nervios"],
+        "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
+        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago"],
+        "corazón": ["corazón", "presión arterial", "colesterol"],
+        "inmunidad": ["inmunidad", "defensas", "sistema inmune"]
+    }
+
+    for keyword, concepts in keyword_map.items():
+        if keyword in message:
+            return concepts
+
+    # fallback: just return what the user typed as one concept
+    return [user_message]
 
 client.close()
