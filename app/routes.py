@@ -140,6 +140,7 @@ def process_user_input(user_id, user_message):
         ctx["preference"] = user_message
         # Form a query
         query_terms = [ctx["health_goal"], ctx["preference"]]
+        results = query_weaviate(query_terms)
         state["stage"] = "done"
         return {
             "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
@@ -164,21 +165,21 @@ def chat():
         print("🟡 /chat endpoint hit")
 
         data = request.get_json()
-        print("📨 Request JSON:", data)
+        print("🔢 Request JSON:", data)
 
         user_message = data.get('message')
-        print("🧠 User message:", user_message)
+        print("👵🏽 User message:", user_message)
 
         if not user_message:
             return jsonify({"error": "Message required"}), 400
 
         user_id = data.get("user_id", "anonymous")
 
-        print("🔁 User state before processing:", chat_state.get(user_id))
+        print("👵🏽🆔 User state (Current USER_ID) before processing user input:", chat_state.get(user_id))
 
         logic_response = process_user_input(user_id, user_message)
 
-        print("🧠 Final bot response:", logic_response)
+        print("🤖 Final bot response:", logic_response)
 
         return jsonify({
             "text": logic_response["text"],
