@@ -89,9 +89,10 @@ def process_user_input(user_id, user_message):
     if stage == "recommendation_category":
         category_map = {
             "energía": ["energía", "fatiga", "vitalidad"],
-            "sueño": ["sueño", "insomnia", "relajación"],
-            "corazón": ["immune system", "immunity", "defense"],
-            "otro": [] # fallback
+            "sueño": ["sueño", "insomnio", "relajación"],
+            "corazón": ["corazón", "presión arterial", "colesterol", "salud cardiovascular"],  # ✅ corrected
+            "inmunológico": ["inmunidad", "defensas", "vitamina c"],
+            "otro": []
         }   
 
         for key, val in category_map.items():
