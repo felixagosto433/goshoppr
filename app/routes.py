@@ -17,11 +17,25 @@ def process_user_input(user_id, user_message):
             "context": {}
         }
 
+    print(f"🆕 Initialized chat_state for user_id: {user_id}")
+
     # First naming of variables
     state = chat_state[user_id]
-
     stage = state["stage"]
     ctx = state["context"]
+
+    # ✅ Force welcome message on empty message
+    if user_message.strip() == "":
+        state["stage"] = "main_menu"
+        return {
+            "text": "Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
+            "options": [
+                "Ver productos recomendados",
+                "Obtener asesoramiento personalizado para vitaminas y suplementos",
+                "Resolver dudas sobre mis pedidos",
+                "Conocer promociones especiales"
+            ]
+        }
 
     # === Stage 1: Welcome ===
     if stage =="welcome":
