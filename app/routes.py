@@ -162,6 +162,14 @@ def process_user_input(user_id, user_message):
             "products": results
         }
     
+    # === Stage 6: Repeat flow ===
+    if stage == "done":
+        state["stage"] = "main_menu"
+        print(f"📍 Transitioning to stage: {state['stage']}")
+        return {
+            "text": "¿Te puedo ayudar con algo más?"
+        }
+    
     # === Default / fallback ===
     return {
         "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
@@ -190,7 +198,8 @@ def chat():
 
         user_id = data.get("user_id", "anonymous")
 
-        print("👵🏽🆔 User state (Current USER_ID) before processing user input:", chat_state.get(user_id))
+        print(f"chat_state keys: {list(chat_state.keys())}")
+        print(f"Current state for {user_id}: {chat_state.get(user_id)}")
 
         logic_response = process_user_input(user_id, user_message)
 
