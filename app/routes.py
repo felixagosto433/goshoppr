@@ -210,7 +210,6 @@ def chat():
 
         user_id = data.get("user_id", "anonymous")
 
-        print(f"chat_state keys: {list(chat_state.keys())}")
         print(f"Current state for {user_id}: {get_user_state(user_id)}")
 
         logic_response = process_user_input(user_id, user_message)
