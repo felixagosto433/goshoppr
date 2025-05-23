@@ -2,31 +2,31 @@ from flask import Blueprint, request, jsonify, current_app
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from utils import extract_concepts, query_weaviate
+from db import get_user_state, set_user_state
 
 main = Blueprint('main', __name__)
 
 # Temporary process user input logic:
 
-chat_state = {} 
-
 def process_user_input(user_id, user_message):
-    # Initialize user_state if new
-    if user_id not in chat_state:
-        chat_state[user_id] = {
+    # Get user state from DB
+    state = get_user_state(user_id)
+
+    if not state:
+        # First-time user
+        state = {
             "stage": "welcome",
             "context": {}
         }
+        set_user_state(user_id, state)
 
-    print(f"🆕 Initialized chat_state for user_id: {user_id}")
-
-    # First naming of variables
-    state = chat_state[user_id]
     stage = state["stage"]
     ctx = state["context"]
 
     # ✅ Force welcome message on empty message
     if user_message.strip() == "":
         state["stage"] = "main_menu"
+        set_user_state(user_id, state)
         return {
             "text": "Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
             "options": [
@@ -38,8 +38,9 @@ def process_user_input(user_id, user_message):
         }
 
     # === Stage 1: Welcome ===
-    if stage =="welcome":
+    if stage == "welcome":
         state["stage"] = "main_menu"
+        set_user_state(user_id, state)
         return {
             "text": "¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
             "options": [
@@ -49,11 +50,12 @@ def process_user_input(user_id, user_message):
                 "Conocer promociones especiales"
             ]
         }
-    
+
     # === Stage 2: Main Menu ===
     if stage == "main_menu":
         if "recomendados" in user_message.lower():
             state["stage"] = "recommendation_category"
+            set_user_state(user_id, state)
             return {
                 "text": "Perfecto. ¿Qué estás buscando mejorar?",
                 "options": [
@@ -64,13 +66,12 @@ def process_user_input(user_id, user_message):
                     "Otro (especificar)"
                 ]
             }
-        
         elif "asesoramiento" in user_message.lower():
             state["stage"] = "personal_advice"
+            set_user_state(user_id, state)
             return {
                 "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?" 
             }
-        
         elif "pedidos" in user_message.lower():
             return {
                 "text": "¿En qué puedo ayudarte con tu pedido?",
@@ -81,13 +82,11 @@ def process_user_input(user_id, user_message):
                     "Métodos de pago"
                 ]
             }
-        
         elif "promociones" in user_message.lower():
             return {
                 "text": "¡Excelente! ¿Te interesa recibir un cupón o ver productos en oferta?",
                 "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
             }
-        
         else:
             return {
                 "text": "Lo siento, no entendí eso. ¿Puedes escoger una opción del menú?",
@@ -98,35 +97,37 @@ def process_user_input(user_id, user_message):
                     "Conocer promociones especiales"
                 ]
             }
-        
+
     # === Stage 3: Category-Based Recommendation === 
     if stage == "recommendation_category":
         category_map = {
             "energía": ["energía", "fatiga", "vitalidad"],
             "sueño": ["sueño", "insomnio", "relajación"],
-            "corazón": ["corazón", "presión arterial", "colesterol", "salud cardiovascular"],  # ✅ corrected
+            "corazón": ["corazón", "presión arterial", "colesterol", "salud cardiovascular"],
             "inmunológico": ["inmunidad", "defensas", "vitamina c"],
             "otro": []
-        }   
+        }
 
         for key, val in category_map.items():
-            if key in user_message.lower(): # If one of the categories in my category map is in the users message
+            if key in user_message.lower():
                 if val:
                     results = query_weaviate(val)
                     state["stage"] = "done"
+                    set_user_state(user_id, state)
                     return {
                         "text": f"Aquí tienes algunas recomendaciones para {key}:",
                         "products": results
                     }
                 else:
                     state["stage"] = "custom_query"
+                    set_user_state(user_id, state)
                     return {"text": "Por favor, especifica lo que necesitas mejorar."}
-                
+
         return {
             "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
             "options": list(category_map.keys())
         }
-    
+
     # === Stage 4: Custom Query Handling ===
     if stage == "custom_query":
         concepts = extract_concepts(user_message.lower())
@@ -135,42 +136,53 @@ def process_user_input(user_id, user_message):
             "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
             "products": results
         }
-    
+
     # === Stage 5: Personalized Advice Flow ===
     if stage == "personal_advice":
         ctx["health_goal"] = user_message
+        state["context"] = ctx
         state["stage"] = "ask_medical"
+        set_user_state(user_id, state)
         return {
             "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
         }
-    
+
     elif stage == "ask_medical":
         ctx["medical"] = user_message
+        state["context"] = ctx
         state["stage"] = "ask_preference"
+        set_user_state(user_id, state)
         return {
             "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
         }
-    
+
     elif stage == "ask_preference":
         ctx["preference"] = user_message
-        # Form a query
+        state["context"] = ctx
         query_terms = [ctx["health_goal"], ctx["preference"]]
         results = query_weaviate(query_terms)
         state["stage"] = "done"
+        set_user_state(user_id, state)
         return {
             "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
             "products": results
         }
-    
+
     # === Stage 6: Repeat flow ===
     if stage == "done":
         state["stage"] = "main_menu"
-        print(f"📍 Transitioning to stage: {state['stage']}")
+        set_user_state(user_id, state)
         return {
-            "text": "¿Te puedo ayudar con algo más?"
+            "text": "¿Te puedo ayudar con algo más?",
+            "options": [
+                "Ver productos recomendados",
+                "Obtener asesoramiento personalizado para vitaminas y suplementos",
+                "Resolver dudas sobre mis pedidos",
+                "Conocer promociones especiales"
+            ]
         }
-    
-    # === Default / fallback ===
+
+    # === Fallback
     return {
         "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
     }
@@ -199,7 +211,7 @@ def chat():
         user_id = data.get("user_id", "anonymous")
 
         print(f"chat_state keys: {list(chat_state.keys())}")
-        print(f"Current state for {user_id}: {chat_state.get(user_id)}")
+        print(f"Current state for {user_id}: {get_user_state(user_id)}")
 
         logic_response = process_user_input(user_id, user_message)
 
