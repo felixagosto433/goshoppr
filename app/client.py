@@ -1,22 +1,46 @@
-import weaviate
+# app/client.py
+
 import os
+import weaviate
+from weaviate.classes.init import Auth
 from dotenv import load_dotenv
-from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 
-load_dotenv()
+load_dotenv(".env.staging")
 
-WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
+# OpenAI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+headers = {"X-OpenAI-Api-Key": openai_key}
 
-client = weaviate.connect_to_weaviate_cloud(
-    cluster_url="https://e9crkmaxsxea5xwram0vkw.c0.europe-west3.gcp.weaviate.cloud",
-    auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
-    additional_config=AdditionalConfig(timeout=Timeout(init=10)),
-)
+print(f"Open AI Key: {headers}")
 
-# Test connection
-if client.is_ready():
-    print("Connected to Weaviate Cloud Service!")
-else:
-    print("Failed to connect.")
+# Global cached client
+_client_instance = None
 
-client.close()
+def get_weaviate_client():
+    """Returns a persistent Weaviate client connection"""
+    global _client_instance
+
+    heroku_app_name = os.getenv("HEROKU_APP_NAME")
+
+    if _client_instance is None or not _client_instance.is_connected():
+        print("🔄 Connecting to Weaviate...")
+        cluster_url = os.getenv("WEAVIATE_CLOUD_URL")
+        api_key = os.getenv("WEAVIATE_ADMIN_KEY")
+
+        # Connect client
+        _client_instance = weaviate.connect_to_weaviate_cloud(
+            cluster_url=cluster_url,
+            auth_credentials=Auth.api_key(api_key),
+            headers=headers
+        )
+
+        print("✅ Connected to Weaviate!")
+
+    return _client_instance
+
+def close_weaviate_client():
+    global _client_instance
+    if _client_instance and _client_instance.is_connected():
+        _client_instance.close()
+        print("🔴 Closed Weaviate client")
+        _client_instance = None

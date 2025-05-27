@@ -6,31 +6,117 @@ import os
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from flask import request
+from weaviate.classes.init import AdditionalConfig, Timeout, Auth
+from weaviate.classes.config import Property, DataType, Configure
+import json
 
+# Connecting to local.
+# client = weaviate.connect_to_local()
 
-client = weaviate.connect_to_local()
+# while not client.is_ready():
+#     print("Waiting for Weaviate to be ready...")
+#     time.sleep(30)
 
-while not client.is_ready():
-    print("Waiting for Weaviate to be ready...")
-    time.sleep(30)
+# Cloud connection. 
+load_dotenv(".env.staging")
+WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
-collection = client.collections.get("Supplements")
+# Open AI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+api_key = os.getenv("WEAVIATE_ADMIN_KEY")
+headers = {"X-OpenAI-Api-Key": openai_key}
 
-# Load environment variables
-load_dotenv()
+client = weaviate.connect_to_weaviate_cloud(
+    cluster_url="https://hgassth0ruwsy8cpspbxag.c0.europe-west3.gcp.weaviate.cloud",
+    auth_credentials=Auth.api_key(api_key),
+    additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+    headers=headers
+)
+
+# Test connection
+if client.is_ready():
+    print("Connected to Weaviate Cloud Service!")
+else:
+    print("Failed to connect.")
+
+try:
+    collections = client.collections.list_all()
+    print("______________CHECKING IF COLLECTIONS ARE PRESENT___________")
+    print(f"Existing collections: {collections.keys()}") 
+    collection = client.collections.get("Supplements")
+except Exception as e:
+    print(f"Error locating collection {e}")
 
 # Google Sheets authentication
-SERVICE_KEY_PATH = os.getenv("SERVICE_KEY")
-gc = gspread.service_account(filename=SERVICE_KEY_PATH)
-sheet = gc.open('Go Shop Vector Database')  # Replace with your sheet name
-worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
+# SERVICE_KEY_PATH = os.getenv("SERVICE_KEY")
+# gc = gspread.service_account(filename=SERVICE_KEY_PATH)
+# sheet = gc.open('Go Shop Vector Database')  # Replace with your sheet name
+# worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
 
-# PRINT SCHEMA
+# HUGGING_TOKEN = os.getenv("HUGGING_TOKEN")
+
+# # Define the connection parameters properly
+# client = weaviate.connect_to_local()
+# # Initialize the Weaviate client
+# client.connect()
+# print("Connected!!!")
+
+# SCHEMA CREATION AND DB POPULATION
+# try:
+#     # Check if the "Supplements" collection exists
+#     collections = client.collections.list_all()
+#     print(f"Existing collections: {collections.keys()}") 
+
+#     if "Supplements" in collections:
+#         print("Collection 'Supplements' already exists...")
+#     else:
+#         print("Creating 'Supplements' collection...")
+#         client.collections.create(
+#             "Supplements",
+#             vectorizer_config=Configure.Vectorizer.text2vec_huggingface(),
+#             properties=[
+#         Property(name="nombre", data_type=DataType.TEXT, vectorizer_config={"skip": True}),
+#         Property(name="categoria", data_type=DataType.TEXT),
+#         Property(name="descripcion", data_type=DataType.TEXT),
+#         Property(name="ingredientes", data_type=DataType.TEXT_ARRAY),
+#         Property(name="usage", data_type=DataType.TEXT, vectorizer_config={"skip": True}),
+#         Property(name="precio", data_type=DataType.NUMBER, vectorizer_config={"skip": True}),
+#         Property(name="inventario", data_type=DataType.NUMBER, vectorizer_config={"skip": True}),
+#         Property(name="link", data_type=DataType.TEXT, vectorizer_config={"skip": True}),
+#     ],
+#         )
+#         print("Collection created successfully!!!")
+
+#     # Load the collection
+#     supplements_collection = client.collections.get("Supplements")
+
+#     # Load JSON Data
+#     with open("vitaminas.json", "r", encoding="utf-8") as file:
+#         data = json.load(file)
+
+#     # Insert each object into the collection
+#     for obj in data:
+#         supplements_collection.data.insert(obj)
+#     print("Data imported successfully!")
+
+# except Exception as e:
+#     print(f"The following error occurred: {e}")
+
+# finally:
+#     client.close()
+#     print("Connection closed. Done.")
+
+#PRINT SCHEMA
+# collection.config.update({
+#     "vectorizer": "text2vec-openai"  # You can use other vectorizers, depending on your setup.
+# })
+# print("Schema succesfully updated")
+
 # print("_________________________________________")
 # print("SCHEMA")
 # print(collection)
 
-# PRINT ALL OBJECTS
+# # PRINT ALL OBJECTS
 # print("_________________________________________")
 # print("OBJECTS")
 # for item in collection.iterator():
@@ -60,18 +146,18 @@ worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
 # print(properties)
 
 # Hardcode Testing fetching by name property
+# print("______________FETCHING BY PROPERTY___________")
 # result = collection.query.fetch_objects(
 #     filters=Filter.by_property("nombre").equal("Cartílago de Tiburón")
 # )
 # print("Query Result:", result.objects)
 
 # Hardcode Testing fetching by category property
+# print("______________FETCHING BY Category___________")
 # result = collection.query.fetch_objects(
 #     filters=Filter.by_property("categoria").equal("Acidos Grasos Omega")
 # )
 # print("Query Result:", result.objects)
-
-
 
 # Hardcode testing for deleting item
 # name = "Test Item"
@@ -107,6 +193,7 @@ worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
 #             "recommended_for": ["Test Use"],
 #             "link": "https://example.com/test-item"
 #         }
+
 # try:
 #     required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
 #     missing_fields = [item for item in required_fields if item not in test_item]
@@ -128,26 +215,26 @@ worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
 #     print(f"Error found: {e}")
 
 # Hardcode testing updating item
-name = "Test Item"
-data = {"precio": 12.99}
-try:
+# name = "Test Item"
+# data = {"precio": 12.99}
+# try:
 
-    # Find the item using filtered name
-    query = collection.query.fetch_objects(
-        filters=Filter.by_property("nombre").equal(name)
-    )
-    items = query.objects
+#     # Find the item using filtered name
+#     query = collection.query.fetch_objects(
+#         filters=Filter.by_property("nombre").equal(name)
+#     )
+#     items = query.objects
 
-    if not items:
-        print("Item not found")
+#     if not items:
+#         print("Item not found")
     
-    # Update the item
-    uuid = items[0].uuid
-    collection.data.update(uuid=uuid, properties=data)
-    print("Item updated succesfully!")
+#     # Update the item
+#     uuid = items[0].uuid
+#     collection.data.update(uuid=uuid, properties=data)
+#     print("Item updated succesfully!")
 
-except Exception as e:
-    print(f"Error updating item: {e}")
+# except Exception as e:
+#     print(f"Error updating item: {e}")
 
 # Hardcode testing for getting items with filters
 # name = "Cartílago de Tiburón"
@@ -175,6 +262,48 @@ except Exception as e:
 
 # except Exception as e:
 #     print(f"Error getting item: {e}")
+
+# DELETE A COLLECTION
+
+client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
+print("Collection succesfully deleted")
+
+# Deleting each item in the weaviate db by id
+# try:
+#     print(f"Clearing all data from the '{collection}' collection...")
+#     collection = client.collections.get(collection)
+
+#     for item in collection.iterator():
+#         collection.data.delete_by_id(
+#             item.uuid
+#         )
+
+#     print(f"All data from '{collection}' has been cleared!")
+# except Exception as e:
+#     print(f"An error occurred while clearing the collection: {e}")
+# finally:
+#     client.close()
+#     print("Connection closed.")
+
+# FIRST SCENARIO TEST
+
+# try:
+#     response = collection.query.near_text(
+#         query = "Con Vitamina D3",
+#         limit=5
+#     )
+
+#     # Parse response
+#     if response and response.objects:
+#         result_strings = [
+#             f"{obj.properties['nombre']} - {obj.properties['descripcion']} (${obj.properties['precio']})"
+#             for obj in response.objects
+#         ]
+#         print("\n".join(result_strings))
+
+#     print("No supplements found for your query. Please try a different category.")
+# except Exception as e:
+#     print(f"An error occurred while processing your request: {str(e)}")
 
 client.close()
 

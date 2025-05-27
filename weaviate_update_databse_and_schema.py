@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 import json
 import time
 import weaviate
-from weaviate.classes.config import Property, DataType
+from weaviate.classes.config import Property, DataType, Configure
+from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 from weaviate.util import generate_uuid5
 
 # Load environment variables
@@ -16,9 +17,28 @@ SERVICE_KEY_PATH = os.getenv("SERVICE_KEY")
 gc = gspread.service_account(filename=SERVICE_KEY_PATH)
 sheet = gc.open('Go Shop Vector Database')  # Replace with your sheet name
 worksheet = sheet.worksheet('Sheet1')  # Replace with your tab name
+WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
+
+# Open AI authentication
+openai_key = os.getenv("OPENAI_APIKEY")
+headers = {
+    "X-OpenAI-Api-Key": openai_key,
+}
 
 # Connect to Weaviate
-client = weaviate.connect_to_local()
+client = weaviate.connect_to_weaviate_cloud(
+    cluster_url="https://pxplk2lvsey4xwtvdu1jeg.c0.us-east1.gcp.weaviate.cloud",
+    auth_credentials=Auth.api_key(WEAVIATE_ADMIN_KEY),
+    additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+    headers=headers
+)
+
+# Test connection
+if client.is_ready():
+    print("Connected to Weaviate Cloud Service!")
+else:
+    print("Failed to connect.")
+
 client.connect()
 print("Connected to Weaviate!")
 
@@ -52,7 +72,7 @@ def fetch_google_sheets_data():
     return [transform_row(row) for _, row in df.iterrows()]
 
 def update_weaviate_schema(data):
-    collection_exists = client.collections.exists(collection_name)
+    collection_exists = client.collections.list_all()
     if collection_exists:
         print(f"Collection '{collection_name}' found. Checking for schema updates...")
         collection = client.collections.get(collection_name)
@@ -71,17 +91,25 @@ def update_weaviate_schema(data):
 
     else:
         print(f"Collection '{collection_name}' not found. Creating it...")
+        
+        # Define properties for the collection
         properties = [
             Property(name=key, data_type=(DataType.TEXT_ARRAY if isinstance(value, list)
                                           else DataType.NUMBER if isinstance(value, (int, float))
                                           else DataType.TEXT))
             for key, value in data[0].items()
         ]
-        client.collections.create(collection_name, properties=properties)
+
+        # Create the collection with the OpenAI vectorizer
+        client.collections.create(
+            collection_name,
+            properties=properties,
+            vectorizer_config=Configure.Vectorizer.text2vec_openai()  # Specify the OpenAI vectorizer here
+        )
         print(f"Collection '{collection_name}' created successfully!")
 
 
-def upload_data_to_weaviate(collection, data, max_retries=10, wait_time=30):
+def upload_data_to_weaviate(collection, data, max_retries=5, wait_time=30):
     for item in data:
         retries = 0
         while retries < max_retries:
@@ -109,34 +137,7 @@ def upload_data_to_weaviate(collection, data, max_retries=10, wait_time=30):
         else:
             print(f"Failed to upload '{item['nombre']}' after {max_retries} retries. Skipping...")
 
-def wait_for_model_to_load(max_wait_time=300, check_interval=30):
-    total_wait_time = 0
-    while total_wait_time < max_wait_time:
-        try:
-            # Perform a dummy operation to test if the model is ready
-            dummy_query = client.collections.get("Supplements").query.near_text("test")
-            print("Model is ready!")
-            return True
-        except Exception as e:
-            if "model is currently loading" in str(e):
-                print(f"Model is loading... Waiting for {check_interval} seconds.")
-                time.sleep(check_interval)
-                total_wait_time += check_interval
-            else:
-                print(f"Unexpected error while checking model readiness: {e}")
-                return False
-    print(f"Model did not load within {max_wait_time} seconds.")
-    return False
-
-
-
 try:
-    # Ensure the model is ready before proceeding
-    if not wait_for_model_to_load():
-        print("Exiting as the model did not load in time.")
-        client.close()
-        exit(1)
-
     # Fetch Google Sheets data
     json_data = fetch_google_sheets_data()
     print("Data fetched from Google Sheets!")

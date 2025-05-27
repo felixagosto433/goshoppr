@@ -9,11 +9,11 @@ from weaviate.classes.query import Filter
 from app.client import get_weaviate_client
 import json
 
-# Load the .env.production file
-load_dotenv(".env.production")
+# Load the .env.staging file
+load_dotenv(".env.staging")
 
-class ProductionRoutesTestCase(unittest.TestCase):
-    BASE_URL = "https://vast-escarpment-05453-5a02b964d113.herokuapp.com/" 
+class StagingRoutesTestCase(unittest.TestCase):
+    BASE_URL = "https://staging-goshoppr-bcf178c9dd3f.herokuapp.com/"
 
     def setUp(self):
         self.client = get_weaviate_client()
@@ -78,26 +78,21 @@ class ProductionRoutesTestCase(unittest.TestCase):
         except Exception as e:
             print(f"The following error occurred: {e}")
 
+        
     def tearDown(self):
         """Close Weaviate connection after all tests"""
         if self.client.is_connected():
             self.client.close()
-        
+            
+
     def test_chat_route(self):
-        """
-        Test the /chat endpoint with a valid message.
-        """
         payload = {"message": "Ayuda para dormir"}
-        # Posts the payload in the chat endpoint
         response = requests.post(f"{self.BASE_URL}/chat", json=payload)
-        print("test_chat_route")
         print("DEBUG: Response Status Code:", response.status_code)
         print("DEBUG: Response Text:", response.text)
 
         self.assertEqual(response.status_code, 200)
-        # Checks if there is a response in the json object
         self.assertIn("response", response.json())
-        # Checks if object is not empty (Length of object > 0)
         self.assertTrue(len(response.json()["response"]) > 0)
 
     def test_get_item_by_name(self):
@@ -107,7 +102,7 @@ class ProductionRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_add_item_with_missing_fields(self):
-        incomplete_item = {"nombre": "Incomplete Item", "precio": 5.99}
+        incomplete_item = {"nombre": "Item incompleto", "precio": "12.99"}
         response = requests.post(f"{self.BASE_URL}/items", json=incomplete_item)
         response_json = response.json()
         print("DEBUG: Response JSON:", response_json)
