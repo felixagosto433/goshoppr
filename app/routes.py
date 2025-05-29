@@ -140,6 +140,8 @@ def process_user_input(user_id, user_message):
 
     # === Stage 4: Custom Query Handling ===
     if stage == "custom_query":
+        state["stage"] = "done"
+        set_user_state(user_id, state)
         concepts = extract_concepts(user_message.lower())
         results = query_weaviate(concepts)
         return {
