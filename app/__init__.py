@@ -6,11 +6,12 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
 
-    # 🔧 Apply full CORS config
-    #CORS(app, resources={r"/*": {"origins": "https://bananos.mybigcommerce.com"}}, 
-    #     methods=["GET", "POST", "OPTIONS"],
-    #     allow_headers=["Content-Type"])
-    CORS(app)
+    CORS(app, resources={r"/chat": {
+        "origins": "https://goshop.mybigcommerce.com",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+        "supports_credentials": True
+    }})
 
     app.register_blueprint(main)
     app.weaviate_client = get_weaviate_client()
