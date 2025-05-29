@@ -16,36 +16,3 @@ def create_app():
     app.weaviate_client = get_weaviate_client()
 
     return app
-
-
-# from flask import Flask
-# from flask_sqlalchemy import SQLAlchemy
-# from .client import get_weaviate_client
-# import os
-# from config import config  # Import the configuration mapping dictionary
-
-# def create_app(config_name=None):
-#     # Because config_name=None, the FLAS_ENV variable is used. 
-#     app = Flask(__name__)
-
-#     # Use the environment variable of the heroku app name
-#     env = os.getenv("HEROKU_APP_NAME")
-
-#     if env == "staging-goshoppr":
-#         config_name = "staging"
-#     elif env == "vast-escarpment-05453":
-#         config_name = "production"
-#     else:
-#         config_name = os.getenv("FLASK_ENV", "staging")  # Default to development
-#     if config_name:
-#         if config_name in config:
-#             app.config.from_object(config[config_name])
-#         else:
-#             raise ValueError(f"Invalid configuration name: {config_name}")
-
-#     # Import and register blueprints
-#     from .routes import main
-#     app.register_blueprint(main)
-
-#     return app
-
