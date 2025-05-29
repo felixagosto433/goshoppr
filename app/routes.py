@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from utils import extract_concepts, query_weaviate, match_category
-from app.db import get_user_state, set_user_state
+from app.db import get_user_state, set_user_state, get_user_context, set_user_context
 
 main = Blueprint('main', __name__)
 
@@ -91,7 +91,8 @@ def process_user_input(user_id, user_message):
         else:
             state["stage"] = "outside_stage"
             set_user_state(user_id, state)
-            out_counter=1
+            ctx = state.get("context", {})
+            ctx["out_counter"] = ctx.get("out_counter", 0) + 1
             return {
                 "text": "Por favor, escoge una de las opciones.",
                 "options": [
@@ -132,24 +133,12 @@ def process_user_input(user_id, user_message):
                 "text": f"Aquí tienes algunas recomendaciones para {matched_category}:",
                 "products": results
             }
-        else:
-            state["stage"] = "outside_stage"
-            set_user_state(user_id, state)
-            out_counter=1
+        
+        else: 
             return {
-                "text": "Por favor, escoge una de las opciones.",
-                "options": [
-                "Catálogo de Productos 💊",
-                "Ayuda Personalizada de Suplementos 💡",
-                "Dudas sobre mis pedidos 📦",
-                "Promociones especiales 💸"
-            ]
+                "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
+                "options": list(category_map.keys())
             }
-
-        return {
-            "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
-            "options": list(category_map.keys())
-        }
 
 
     # === Stage 4: Custom Query Handling ===
@@ -194,9 +183,13 @@ def process_user_input(user_id, user_message):
             "products": results
         }
     
-    # === Stage 5: Outside Options Query ===
+    # === Stage 6: Outside Options Query ===
     elif stage == "outside_stage":
-        while out_counter < 3:
+        ctx = get_user_context(user_id)
+        ctx["out_counter"] = ctx.get("out_counter", 0) + 1
+
+        if ctx["out_counter"] < 3:
+            set_user_context(user_id, ctx)
             return {
                 "text": "Escoge una de las opciones",
                 "options": [
@@ -206,16 +199,18 @@ def process_user_input(user_id, user_message):
                 "Promociones especiales 💸"
             ]
             }
-        #Extract concepts
-        state["stage"] = "done"
-        set_user_state(user_id, state)
-        concepts = extract_concepts(user_message.lower())
-        results = query_weaviate(concepts)
-        return {
-            "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
-            "products": results
-        }
+        else:
+            ctx["out_counter"] = 0
+            state["stage"] = "done"
+            state["context"] = ctx
+            set_user_state(user_id, state)
 
+            concepts = extract_concepts(user_message.lower())
+            results = query_weaviate(concepts)
+            return {
+                "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
+                "products": results
+            }
 
     # === Stage 7: Repeat flow ===
     if stage == "done":
