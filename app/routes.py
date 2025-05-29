@@ -103,7 +103,7 @@ def process_user_input(user_id, user_message):
             "higado": ["hígado", "hepáticos", "renal"], 
             "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
             "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
-            "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar"],
+            "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar", "barriga", "pipa"],
             "corazón": ["corazón", "presión arterial", "colesterol"],
             "inmunidad": ["inmunidad", "defensas", "sistema inmune"],
             "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
