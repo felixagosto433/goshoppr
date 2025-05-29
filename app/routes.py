@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
-from utils import extract_concepts, query_weaviate
+from utils import extract_concepts, query_weaviate, match_category
 from app.db import get_user_state, set_user_state
 
 main = Blueprint('main', __name__)
@@ -30,10 +30,10 @@ def process_user_input(user_id, user_message):
         return {
             "text": "Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
             "options": [
-                "Ver productos recomendados",
-                "Obtener asesoramiento personalizado para vitaminas y suplementos",
-                "Resolver dudas sobre mis pedidos",
-                "Conocer promociones especiales"
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
             ]
         }
 
@@ -44,16 +44,16 @@ def process_user_input(user_id, user_message):
         return {
             "text": "¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
             "options": [
-                "Ver productos recomendados",
-                "Obtener asesoramiento personalizado para vitaminas y suplementos",
-                "Resolver dudas sobre mis pedidos",
-                "Conocer promociones especiales"
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
             ]
         }
 
     # === Stage 2: Main Menu ===
     if stage == "main_menu":
-        if "recomendados" in user_message.lower():
+        if "Catálogo" in user_message.lower() or "recomendados" in user_message.lower():
             state["stage"] = "recommendation_category"
             set_user_state(user_id, state)
             return {
@@ -62,7 +62,8 @@ def process_user_input(user_id, user_message):
                     "Energía y Vitalidad",
                     "Sueño y Relajación",
                     "Salud del Corazón",
-                    "Sistema Inmunológico",
+                    "Apoyo Immune",
+                    "Salud Digestiva",
                     "Otro (especificar)"
                 ]
             }
@@ -88,45 +89,50 @@ def process_user_input(user_id, user_message):
                 "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
             }
         else:
-            return {
-                "text": "Lo siento, no entendí eso. ¿Puedes escoger una opción del menú?",
-                "options": [
-                    "Ver productos recomendados",
-                    "Obtener asesoramiento personalizado",
-                    "Resolver dudas sobre mis pedidos",
-                    "Conocer promociones especiales"
-                ]
-            }
+            state["stage"] = "custom_query"
 
     # === Stage 3: Category-Based Recommendation === 
     if stage == "recommendation_category":
         category_map = {
-            "energía": ["energía", "fatiga", "vitalidad"],
-            "sueño": ["sueño", "insomnio", "relajación"],
-            "corazón": ["corazón", "presión arterial", "colesterol", "salud cardiovascular"],
-            "inmunológico": ["inmunidad", "defensas", "vitamina c"],
+            "articular": ["articulaciones", "movilidad", "huesos", "músculos"],
+            "hombres": ["testosterona", "masculinidad", "prostata", "impulso sexual", "esperma", "urinario"], 
+            "higado": ["hígado", "hepáticos", "renal"], 
+            "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
+            "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
+            "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar"],
+            "corazón": ["corazón", "presión arterial", "colesterol"],
+            "inmunidad": ["inmunidad", "defensas", "sistema inmune"],
+            "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
             "otro": []
         }
 
-        for key, val in category_map.items():
-            if key in user_message.lower():
-                if val:
-                    results = query_weaviate(val)
-                    state["stage"] = "done"
-                    set_user_state(user_id, state)
-                    return {
-                        "text": f"Aquí tienes algunas recomendaciones para {key}:",
-                        "products": results
-                    }
-                else:
-                    state["stage"] = "custom_query"
-                    set_user_state(user_id, state)
-                    return {"text": "Por favor, especifica lo que necesitas mejorar."}
+        matched_keywords, matched_category = match_category(user_message, category_map)
+
+        if matched_keywords:
+            results = query_weaviate(matched_keywords)
+            state['stage'] = "done"
+            set_user_state(user_id, state)
+
+        if matched_keywords:
+            results = query_weaviate(matched_keywords)
+            state["stage"] = "done"
+            set_user_state(user_id, state)
+            return {
+                "text": f"Aquí tienes algunas recomendaciones para {matched_category}:",
+                "products": results
+            }
+        else:
+            state["stage"] = "custom_query"
+            set_user_state(user_id, state)
+            return {
+                "text": "Por favor, especifica lo que necesitas mejorar."
+            }
 
         return {
             "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
             "options": list(category_map.keys())
         }
+
 
     # === Stage 4: Custom Query Handling ===
     if stage == "custom_query":
