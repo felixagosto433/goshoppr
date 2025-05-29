@@ -89,10 +89,17 @@ def process_user_input(user_id, user_message):
                 "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
             }
         else:
-            state["stage"] = "custom_query"
+            state["stage"] = "outside_stage"
             set_user_state(user_id, state)
+            out_counter=1
             return {
-                "text": "¿Podrías describir lo que te interesa en tus propias palabras?"
+                "text": "Por favor, escoge una de las opciones.",
+                "options": [
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
+            ]
             }
 
     # === Stage 3: Category-Based Recommendation === 
@@ -126,10 +133,17 @@ def process_user_input(user_id, user_message):
                 "products": results
             }
         else:
-            state["stage"] = "custom_query"
+            state["stage"] = "outside_stage"
             set_user_state(user_id, state)
+            out_counter=1
             return {
-                "text": "Por favor, especifica lo que necesitas mejorar."
+                "text": "Por favor, escoge una de las opciones.",
+                "options": [
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
+            ]
             }
 
         return {
@@ -179,8 +193,31 @@ def process_user_input(user_id, user_message):
             "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
             "products": results
         }
+    
+    # === Stage 5: Outside Options Query ===
+    elif stage == "outside_stage":
+        while out_counter < 3:
+            return {
+                "text": "Escoge una de las opciones",
+                "options": [
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
+            ]
+            }
+        #Extract concepts
+        state["stage"] = "done"
+        set_user_state(user_id, state)
+        concepts = extract_concepts(user_message.lower())
+        results = query_weaviate(concepts)
+        return {
+            "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
+            "products": results
+        }
 
-    # === Stage 6: Repeat flow ===
+
+    # === Stage 7: Repeat flow ===
     if stage == "done":
         state["stage"] = "main_menu"
         set_user_state(user_id, state)
