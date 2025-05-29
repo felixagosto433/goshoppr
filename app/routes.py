@@ -90,6 +90,7 @@ def process_user_input(user_id, user_message):
             }
         else:
             state["stage"] = "custom_query"
+            set_user_state(user_id, state)
             return {
                 "text": "No entendí esa opción. ¿Podrías describir lo que te interesa en tus propias palabras?"
             }
