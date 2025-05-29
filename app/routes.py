@@ -90,6 +90,9 @@ def process_user_input(user_id, user_message):
             }
         else:
             state["stage"] = "custom_query"
+            return {
+                "text": "No entendí esa opción. ¿Podrías describir lo que te interesa en tus propias palabras?"
+            }
 
     # === Stage 3: Category-Based Recommendation === 
     if stage == "recommendation_category":
