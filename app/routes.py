@@ -53,7 +53,7 @@ def process_user_input(user_id, user_message):
 
     # === Stage 2: Main Menu ===
     if stage == "main_menu":
-        if "Catálogo" in user_message.lower() or "recomendados" in user_message.lower():
+        if "catálogo" in user_message.lower() or "recomendados" in user_message.lower():
             state["stage"] = "recommendation_category"
             set_user_state(user_id, state)
             return {
@@ -67,7 +67,7 @@ def process_user_input(user_id, user_message):
                     "Otro (especificar)"
                 ]
             }
-        elif "asesoramiento" in user_message.lower():
+        elif "personalizada" in user_message.lower():
             state["stage"] = "personal_advice"
             set_user_state(user_id, state)
             return {
