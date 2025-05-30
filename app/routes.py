@@ -184,33 +184,71 @@ def process_user_input(user_id, user_message):
         }
     
     # === Stage 6: Outside Options Query ===
-    elif stage == "outside_stage":
-        ctx = get_user_context(user_id)
-        ctx["out_counter"] = ctx.get("out_counter", 0) + 1
+    ctx = state.get("context", {})
 
-        if ctx["out_counter"] < 3:
-            set_user_context(user_id, ctx)
-            return {
-                "text": "FOURTH (COUNTER) Escoge una de las opciones",
-                "options": [
-                "Catálogo de Productos 💊",
-                "Ayuda Personalizada de Suplementos 💡",
-                "Dudas sobre mis pedidos 📦",
-                "Promociones especiales 💸"
-            ]
-            }
-        else:
-            ctx["out_counter"] = 0
-            state["stage"] = "done"
-            state["context"] = ctx
+    valid_options = [
+        "Catálogo de Productos 💊",
+        "Ayuda Personalizada de Suplementos 💡",
+        "Dudas sobre mis pedidos 📦",
+        "Promociones especiales 💸"
+    ]
+
+    if user_message in valid_options:
+        ctx["out_counter"] = 0  # ✅ Reset counter
+        state["context"] = ctx
+        set_user_state(user_id, state)
+
+        # ✅ Handle valid choice
+        if user_message == "Catálogo de Productos 💊":
+            state["stage"] = "main_menu"
             set_user_state(user_id, state)
-
-            concepts = extract_concepts(user_message.lower())
-            results = query_weaviate(concepts)
             return {
-                "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
-                "products": results
+                "text": "Gracias! Aquí tienes nuestro catálogo completo 🛍️"
             }
+
+        if user_message == "Ayuda Personalizada de Suplementos 💡":
+            state["stage"] = "main_menu"
+            set_user_state(user_id, state)
+            return {
+                "text": "Cuéntame, ¿qué beneficio estás buscando? Ej: más energía, dormir mejor, etc."
+            }
+
+        if user_message == "Dudas sobre mis pedidos 📦":
+            state["stage"] = "main_menu"
+            set_user_state(user_id, state)
+            return {
+                "text": "Nuestro equipo de soporte te responderá por email. ¿Quieres dejar tu mensaje aquí?"
+            }
+
+        if user_message == "Promociones especiales 💸":
+            state["stage"] = "main_menu"
+            set_user_state(user_id, state)
+            return {
+                "text": "Ahora mismo tenemos un 20% de descuento en productos para dormir mejor 😴"
+            }
+
+    elif ctx.get("out_counter", 0) < 2:
+        ctx["out_counter"] = ctx.get("out_counter", 0) + 1
+        state["context"] = ctx
+        set_user_state(user_id, state)
+        return {
+            "text": "Por favor, escoge una de las siguientes opciones 👇",
+            "options": valid_options
+        }
+
+    else:
+        # Fallback: give recommendations and reset
+        ctx["out_counter"] = 0
+        state["context"] = ctx
+        set_user_state(user_id, state)
+
+        concepts = extract_concepts(user_message.lower())
+        results = query_weaviate(concepts)
+
+        return {
+            "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
+            "products": results
+        }
 
     # === Stage 7: Repeat flow ===
     if stage == "done":
