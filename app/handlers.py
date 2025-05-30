@@ -1,0 +1,226 @@
+from enum import Enum
+from db import get_user_state, set_user_state
+from utils import extract_concepts, query_weaviate
+
+# === Enum for Chat Stages ===
+class ChatStage(Enum):
+    WELCOME = "welcome"
+    MAIN_MENU = "main_menu"
+    RECOMMENDATION = "recommendation_category"
+    PERSONAL_ADVICE = "personal_advice"
+    ASK_MEDICAL = "ask_medical"
+    ASK_PREFERENCE = "ask_preference"
+    CUSTOM_QUERY = "custom_query"
+    OUTSIDE_STAGE = "outside_stage"
+    DONE = "done"
+
+def process_user_input(user_id, user_message):
+    state = get_user_state(user_id) or {"stage": ChatStage.WELCOME.value, "context":{}}
+    stage = state["stage"] 
+
+    # Initial trigger
+    if user_message == "__init__":
+        return handle_init(user_id)
+    
+    return route_message(user_id, user_message, state)
+
+def route_message(user_id, user_message, state):
+    stage = state["stage"]
+
+    match stage:
+        case ChatStage.WELCOME.value:
+            return handle_welcome(user_id, user_message, state)
+        case ChatStage.MAIN_MENU.value:
+            return handle_main_menu(user_id, user_message, state)
+        case ChatStage.PERSONAL_ADVICE.value:
+            return handle_personal_advice(user_id, user_message, state)
+        case ChatStage.ASK_MEDICAL.value:
+            return handle_medical(user_id, user_message, state)
+        case ChatStage.ASK_PREFERENCE.value:
+            return handle_preference(user_id, user_message, state)
+        case ChatStage.CUSTOM_QUERY.value:
+            return handle_custom_query(user_id, user_message, state)
+        case ChatStage.OUTSIDE_STAGE.value:
+            return handle_outside(user_id, user_message, state)
+        case ChatStage.DONE.value:
+            return handle_done(user_id, user_message, state)
+        case _:
+            return fallback_response()
+        
+
+def handle_welcome(user_id, user_message, state):
+    state["stage"] = ChatStage.MAIN_MENU.value
+    set_user_state(user_id, state)
+
+    return {
+        "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
+        "options": [
+            "Catálogo de Productos 💊",
+            "Ayuda Personalizada de Suplementos 💡",
+            "Dudas sobre mis pedidos 📦",
+            "Promociones especiales 💸"
+        ]
+    }
+
+def handle_main_menu(user_id, user_message, state):
+    message = user_message.lower().strip()
+
+    match message:
+        case msg if "catálogo" in msg or "recomendados" in msg:
+            state["stage"] = ChatStage.MAIN_MENU.value
+            set_user_state(user_id, state)
+
+            return {
+                "text": "Perfecto. ¿Qué estás buscando mejorar?",
+                "options": [
+                    "Energía y Vitalidad", 
+                    "Sueño y Relajación", 
+                    "Salud del Corazón",
+                    "Apoyo Immune", 
+                    "Salud Digestiva", 
+                    "Otro (especificar)"
+                ]
+            }
+        
+        case msg if "personalizada" in msg:
+            state["stage"] = ChatStage.PERSONAL_ADVICE.value
+            set_user_state(user_id, state)
+
+            return {
+                "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?"
+            }
+        
+        case msg if "pedidos" in msg:
+            return {
+                "text": "¿En qué puedo ayudarte con tu pedido?",
+                "options": [
+                    "Estado de mi pedido", "Información de envío", "Devoluciones", "Métodos de pago"
+                ]
+            }
+
+        case msg if "promociones" in msg:
+            return {
+                "text": "¡Excelente! ¿Te interesa recibir un cupón o ver productos en oferta?",
+                "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
+            }
+
+        case _:
+            return handle_outside(user_id, user_message, state)
+        
+def handle_personal_advice(user_id, user_message, state):
+    ctx = state.get("context", {})
+    ctx["health_goal"] = user_message
+    state["context"] = ctx
+    state["stage"] = ChatStage.ASK_MEDICAL.value
+    set_user_state(user_id, state)
+
+    return {
+        "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?"
+    }
+
+def handle_medical(user_id, user_message, state):
+    ctx = state.get("context", {})
+    ctx["medical"] = user_message
+    state["context"] = ctx
+    state["stage"] = ChatStage.ASK_PREFERENCE.value
+    set_user_state(user_id, state)
+
+    return {
+        "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
+    }
+
+def handle_preference(user_id, user_message, state):
+    ctx = state.get("context", {})
+    ctx["preference"] = user_message
+    state["context"] = ctx
+    query_terms = [ctx["health_goal"], ctx["preference"]]
+    results = query_weaviate(query_terms)
+    state["stage"] = "done"
+    set_user_state(user_id, state)
+    return {
+        "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
+        "products": results
+    }
+
+def handle_custom_query(user_id, user_message, state):
+    state["stage"] = "done"
+    set_user_state(user_id, state)
+    concepts = extract_concepts(user_message.lower())
+    results = query_weaviate(concepts)
+    return {
+
+    }
+
+def handle_outside(user_id, user_message, state):
+    message = user_message.lower().strip()
+
+    valid_options = [
+        "Catálogo de Productos 💊",
+        "Ayuda Personalizada de Suplementos 💡",
+        "Dudas sobre mis pedidos 📦",
+        "Promociones especiales 💸"
+    ]
+
+    ctx = state.get("context", {})
+
+    # ✅ If valid input → go back to main menu
+    if any(option.lower() in message for option in valid_options):
+        state["stage"] = ChatStage.MAIN_MENU.value
+        ctx["out_counter"] = 0
+        state["context"] = ctx
+        set_user_state(user_id, state)
+        return handle_main_menu(user_id, user_message, state)
+
+    # ❌ Invalid → Retry up to 2 times
+    if ctx.get("out_counter", 0) < 2:
+        ctx["out_counter"] = ctx.get("out_counter", 0) + 1
+        state["context"] = ctx
+        set_user_state(user_id, state)
+        return {
+            "text": "Escoge una de las opciones 👇",
+            "options": valid_options
+        }
+
+    # ❌ Still invalid after 2 tries → fallback to concept extraction
+    concepts = extract_concepts(message)
+    results = query_weaviate(concepts)
+    state["stage"] = ChatStage.DONE.value
+    set_user_state(user_id, state)
+
+    return {
+        "text": "Aquí tienes algunas recomendaciones basadas en tu mensaje:",
+        "products": results
+    }
+
+    
+def handle_done(user_id, state):
+    state["stage"] = ChatStage.MAIN_MENU.value
+    set_user_state(user_id, state)
+    return {
+        "text": "FIFTH (DONE) ¿Te puedo ayudar con algo más?",
+        "options": [
+            "Catálogo de Productos 💊",
+            "Ayuda Personalizada de Suplementos 💡",
+            "Dudas sobre mis pedidos 📦",
+            "Promociones especiales 💸"
+        ]
+    }
+
+def handle_init(user_id, state):
+    state["stage"] = ChatStage.MAIN_MENU.value
+    state["context"] = {}
+    set_user_state(user_id, state)
+    return {
+        "text": "(INIT)👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
+        "options": [
+            "Catálogo de Productos 💊",
+            "Ayuda Personalizada de Suplementos 💡",
+            "Dudas sobre mis pedidos 📦",
+            "Promociones especiales 💸"
+        ]
+    }
+
+def fallback_response():
+    return {
+        "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
+    }
