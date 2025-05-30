@@ -23,26 +23,12 @@ def process_user_input(user_id, user_message):
     stage = state["stage"]
     ctx = state["context"]
 
-    # ✅ Force welcome message on empty message
-    if user_message.strip() == "":
+    if user_message.strip() == "" or stage == "welcome":
         state["stage"] = "main_menu"
         set_user_state(user_id, state)
-        return {
-            "text": "FIRST Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
-            "options": [
-                "Catálogo de Productos 💊",
-                "Ayuda Personalizada de Suplementos 💡",
-                "Dudas sobre mis pedidos 📦",
-                "Promociones especiales 💸"
-            ]
-        }
 
-    # === Stage 1: Welcome ===
-    if stage == "welcome":
-        state["stage"] = "main_menu"
-        set_user_state(user_id, state)
         return {
-            "text": " SECOND ¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
+            "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
             "options": [
                 "Catálogo de Productos 💊",
                 "Ayuda Personalizada de Suplementos 💡",
