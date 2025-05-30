@@ -28,7 +28,7 @@ def process_user_input(user_id, user_message):
         state["stage"] = "main_menu"
         set_user_state(user_id, state)
         return {
-            "text": "Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
+            "text": "FIRST Soy tu asistente de salud de Xtravit 👋. ¿Qué deseas hacer hoy?",
             "options": [
                 "Catálogo de Productos 💊",
                 "Ayuda Personalizada de Suplementos 💡",
@@ -42,7 +42,7 @@ def process_user_input(user_id, user_message):
         state["stage"] = "main_menu"
         set_user_state(user_id, state)
         return {
-            "text": "¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
+            "text": " SECOND ¡Hola! 👋 Soy tu asistente de salud de Xtravit. ¿En qué puedo ayudarte hoy?",
             "options": [
                 "Catálogo de Productos 💊",
                 "Ayuda Personalizada de Suplementos 💡",
@@ -94,7 +94,7 @@ def process_user_input(user_id, user_message):
             ctx = state.get("context", {})
             ctx["out_counter"] = ctx.get("out_counter", 0) + 1
             return {
-                "text": "Por favor, escoge una de las opciones.",
+                "text": " THIRD (OUT) Por favor, escoge una de las opciones.",
                 "options": [
                 "Catálogo de Productos 💊",
                 "Ayuda Personalizada de Suplementos 💡",
@@ -191,7 +191,7 @@ def process_user_input(user_id, user_message):
         if ctx["out_counter"] < 3:
             set_user_context(user_id, ctx)
             return {
-                "text": "Escoge una de las opciones",
+                "text": "FOURTH (COUNTER) Escoge una de las opciones",
                 "options": [
                 "Catálogo de Productos 💊",
                 "Ayuda Personalizada de Suplementos 💡",
@@ -217,12 +217,12 @@ def process_user_input(user_id, user_message):
         state["stage"] = "main_menu"
         set_user_state(user_id, state)
         return {
-            "text": "¿Te puedo ayudar con algo más?",
+            "text": "FIFTH (DONE) ¿Te puedo ayudar con algo más?",
             "options": [
-                "Ver productos recomendados",
-                "Obtener asesoramiento personalizado para vitaminas y suplementos",
-                "Resolver dudas sobre mis pedidos",
-                "Conocer promociones especiales"
+                "Catálogo de Productos 💊",
+                "Ayuda Personalizada de Suplementos 💡",
+                "Dudas sobre mis pedidos 📦",
+                "Promociones especiales 💸"
             ]
         }
 
@@ -254,11 +254,13 @@ def chat():
 
         user_id = data.get("user_id", "anonymous")
 
-        print(f"Current state for {user_id}: {get_user_state(user_id)}")
+        print(f"⬆️STATE BEFORE {user_id}: {get_user_state(user_id)}")
 
         logic_response = process_user_input(user_id, user_message)
 
         print("🤖 Final bot response:", logic_response)
+
+        print(f"⬇️STATE AFTER {user_id}: {get_user_state(user_id)}")
 
         return jsonify({
             "text": logic_response["text"],
