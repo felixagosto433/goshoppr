@@ -20,7 +20,7 @@ def process_user_input(user_id, user_message):
 
     # Initial trigger
     if user_message == "__init__":
-        return handle_init(user_id)
+        return handle_init(user_id, state)
     
     return route_message(user_id, user_message, state)
 
@@ -69,7 +69,7 @@ def handle_main_menu(user_id, user_message, state):
 
     match message:
         case msg if "catálogo" in msg or "recomendados" in msg:
-            state["stage"] = ChatStage.MAIN_MENU.value
+            state["stage"] = ChatStage.RECOMMENDATION.value
             set_user_state(user_id, state)
 
             return {
