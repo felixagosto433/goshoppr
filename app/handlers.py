@@ -53,7 +53,7 @@ def handle_welcome(user_id, user_message, state):
     set_user_state(user_id, state)
 
     return {
-        "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
+        "text": "(WELCOME) 👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
         "options": [
             "Catálogo de Productos 💊",
             "Ayuda Personalizada de Suplementos 💡",
@@ -135,7 +135,7 @@ def handle_preference(user_id, user_message, state):
     state["context"] = ctx
     query_terms = [ctx["health_goal"], ctx["preference"]]
     results = query_weaviate(query_terms)
-    state["stage"] = "done"
+    state["stage"] = ChatStage.DONE.value
     set_user_state(user_id, state)
     return {
         "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte:",
@@ -143,7 +143,7 @@ def handle_preference(user_id, user_message, state):
     }
 
 def handle_custom_query(user_id, user_message, state):
-    state["stage"] = "done"
+    state["stage"] = ChatStage.DONE.value
     set_user_state(user_id, state)
     concepts = extract_concepts(user_message.lower())
     results = query_weaviate(concepts)
@@ -177,7 +177,7 @@ def handle_outside(user_id, user_message, state):
         state["context"] = ctx
         set_user_state(user_id, state)
         return {
-            "text": "Escoge una de las opciones 👇",
+            "text": "(OUT) Escoge una de las opciones 👇",
             "options": valid_options
         }
 
@@ -197,7 +197,7 @@ def handle_done(user_id, state):
     state["stage"] = ChatStage.MAIN_MENU.value
     set_user_state(user_id, state)
     return {
-        "text": "FIFTH (DONE) ¿Te puedo ayudar con algo más?",
+        "text": "(DONE) ¿Te puedo ayudar con algo más?",
         "options": [
             "Catálogo de Productos 💊",
             "Ayuda Personalizada de Suplementos 💡",
