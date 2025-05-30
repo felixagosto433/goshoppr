@@ -1,6 +1,6 @@
 from enum import Enum
 from app.db import get_user_state, set_user_state
-from utils import extract_concepts, query_weaviate
+from utils import extract_concepts, query_weaviate, match_category
 
 # === Enum for Chat Stages ===
 class ChatStage(Enum):
@@ -32,6 +32,8 @@ def route_message(user_id, user_message, state):
             return handle_welcome(user_id, user_message, state)
         case ChatStage.MAIN_MENU.value:
             return handle_main_menu(user_id, user_message, state)
+        case ChatStage.RECOMMENDATION.value:
+            return handle_recommendation(user_id, user_message, state)
         case ChatStage.PERSONAL_ADVICE.value:
             return handle_personal_advice(user_id, user_message, state)
         case ChatStage.ASK_MEDICAL.value:
@@ -224,3 +226,33 @@ def fallback_response():
     return {
         "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
     }
+
+def handle_recommendation(user_id, user_message, state):
+    category_map = {
+        "articular": ["articulaciones", "movilidad", "huesos", "músculos"],
+        "hombres": ["testosterona", "masculinidad", "prostata", "impulso sexual", "esperma", "urinario"], 
+        "higado": ["hígado", "hepáticos", "renal"], 
+        "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
+        "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
+        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar", "barriga", "pipa"],
+        "corazón": ["corazón", "presión arterial", "colesterol"],
+        "inmunidad": ["inmunidad", "defensas", "sistema inmune"],
+        "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
+        "otro": []
+    }
+
+    matched_keywords, matched_category = match_category(user_message, category_map)
+
+    if matched_keywords:
+        results = query_weaviate(matched_keywords)
+        state["stage"] = ChatStage.DONE.value
+        set_user_state(user_id, state)
+        return {
+            "text": f"Aquí tienes algunas recomendaciones para {matched_category}:",
+            "products": results
+        }
+    else:
+        return {
+            "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
+            "options": list(category_map.keys())
+        }
