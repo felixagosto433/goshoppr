@@ -109,15 +109,11 @@ def handle_main_menu(user_id, user_message, state):
         case _:
             return handle_outside(user_id, user_message, state)
         
-def handle_personal_advice(user_id, user_message, state):
-    ctx = state.get("context", {})
-    ctx["health_goal"] = user_message
-    state["context"] = ctx
+def handle_personal_advice(user_id, state):
     state["stage"] = ChatStage.ASK_MEDICAL.value
     set_user_state(user_id, state)
-
     return {
-        "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
+        "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?"
     }
 
 def handle_medical(user_id, user_message, state):
