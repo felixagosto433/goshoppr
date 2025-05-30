@@ -1,5 +1,5 @@
 from enum import Enum
-from db import get_user_state, set_user_state
+from app.db import get_user_state, set_user_state
 from utils import extract_concepts, query_weaviate
 
 # === Enum for Chat Stages ===
