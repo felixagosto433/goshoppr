@@ -117,7 +117,7 @@ def handle_personal_advice(user_id, user_message, state):
     set_user_state(user_id, state)
 
     return {
-        "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?"
+        "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
     }
 
 def handle_medical(user_id, user_message, state):
@@ -128,7 +128,7 @@ def handle_medical(user_id, user_message, state):
     set_user_state(user_id, state)
 
     return {
-        "text": "¿Tienes alguna condición médica o tomas medicamentos actualmente?"
+        "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
     }
 
 def handle_preference(user_id, user_message, state):
