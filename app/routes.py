@@ -238,6 +238,8 @@ def process_user_input(user_id, user_message):
 
     else:
         # Fallback: give recommendations and reset
+        state["stage"] = "done"
+        set_user_state(user_id, state)
         ctx["out_counter"] = 0
         state["context"] = ctx
         set_user_state(user_id, state)
