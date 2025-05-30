@@ -1,6 +1,14 @@
 from enum import Enum
 from app.db import get_user_state, set_user_state
 from utils import extract_concepts, query_weaviate, match_category
+from difflib import get_close_matches
+
+MAIN_OPTIONS = [
+    "Catálogo de Productos 💊",
+    "Ayuda Personalizada de Suplementos 💡",
+    "Dudas sobre mis pedidos 📦",
+    "Promociones especiales 💸"
+]
 
 # === Enum for Chat Stages ===
 class ChatStage(Enum):
@@ -109,7 +117,7 @@ def handle_main_menu(user_id, user_message, state):
         case _:
             return handle_outside(user_id, user_message, state)
         
-def handle_personal_advice(user_id, state):
+def handle_personal_advice(user_id, user_message, state):
     state["stage"] = ChatStage.ASK_MEDICAL.value
     set_user_state(user_id, state)
     return {
@@ -146,47 +154,42 @@ def handle_custom_query(user_id, user_message, state):
     concepts = extract_concepts(user_message.lower())
     results = query_weaviate(concepts)
     return {
-
+    "text": "Aquí tienes recomendaciones personalizadas:",
+    "products": results
     }
 
 def handle_outside(user_id, user_message, state):
-    message = user_message.lower().strip()
-
-    valid_options = [
-        "Catálogo de Productos 💊",
-        "Ayuda Personalizada de Suplementos 💡",
-        "Dudas sobre mis pedidos 📦",
-        "Promociones especiales 💸"
-    ]
-
     ctx = state.get("context", {})
+    out_counter = ctx.get("out_counter", 0)
 
-    # ✅ If valid input → go back to main menu
-    if any(option.lower() in message for option in valid_options):
-        state["stage"] = ChatStage.MAIN_MENU.value
+    # ✅ Normalize and check for close matches
+    match = get_close_matches(user_message.strip().lower(), [opt.lower() for opt in MAIN_OPTIONS], n=1, cutoff=0.8)
+    if match:
+        # If a close match is found, simulate user selected that exact option
+        selected = next(opt for opt in MAIN_OPTIONS if opt.lower() == match[0])
         ctx["out_counter"] = 0
         state["context"] = ctx
         set_user_state(user_id, state)
-        return handle_main_menu(user_id, user_message, state)
+        return route_message(user_id, selected, state)  # Re-route to simulate valid option selected
 
-    # ❌ Invalid → Retry up to 2 times
-    if ctx.get("out_counter", 0) < 2:
-        ctx["out_counter"] = ctx.get("out_counter", 0) + 1
+    # ❌ Still not understood — increment counter
+    if out_counter < 2:
+        ctx["out_counter"] = out_counter + 1
         state["context"] = ctx
         set_user_state(user_id, state)
         return {
-            "text": "(OUT) Escoge una de las opciones 👇",
-            "options": valid_options
+            "text": "Por favor, escoge una de las siguientes opciones 👇",
+            "options": MAIN_OPTIONS
         }
-
-    # ❌ Still invalid after 2 tries → fallback to concept extraction
-    concepts = extract_concepts(message)
-    results = query_weaviate(concepts)
-    state["stage"] = ChatStage.DONE.value
+    
+    # ❗ Final fallback
+    ctx["out_counter"] = 0
+    state["context"] = ctx
     set_user_state(user_id, state)
-
+    concepts = extract_concepts(user_message.lower())
+    results = query_weaviate(concepts)
     return {
-        "text": "Aquí tienes algunas recomendaciones basadas en tu mensaje:",
+        "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
         "products": results
     }
 
