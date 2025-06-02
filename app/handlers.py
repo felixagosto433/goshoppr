@@ -73,6 +73,14 @@ def handle_welcome(user_id, user_message, state):
     }
 
 def handle_main_menu(user_id, user_message, state):
+    # Clear previous context when entering main_menu stage
+    ctx = state.get("context", {})
+    new_context = {
+        "previous_stage": ctx.get("previous_stage"), 
+        "session_start": ctx.get("session_start")
+    }
+    state["context"] = new_context
+
     message = user_message.lower().strip()
 
     match message:
@@ -118,6 +126,12 @@ def handle_main_menu(user_id, user_message, state):
             return handle_outside(user_id, user_message, state)
         
 def handle_personal_advice(user_id, user_message, state):
+    # Store initial message
+    ctx = state.get("context", {})
+    if user_message and user_message.strip():
+        ctx["initial_query"] = user_message.strip()
+
+    state["context"] = ctx
     state["stage"] = ChatStage.ASK_MEDICAL.value
     set_user_state(user_id, state)
     return {
@@ -126,11 +140,15 @@ def handle_personal_advice(user_id, user_message, state):
 
 def handle_medical(user_id, user_message, state):
     ctx = state.get("context", {})
-    ctx["medical"] = user_message
+    ctx["health_goal"] = user_message
+
+    # If initial query is not empty, combine it with the health goal. 
+    if "initial_query" in ctx:
+        ctx["health_goal"] = f"{ctx['initial_query']} - {user_message}"
+
     state["context"] = ctx
     state["stage"] = ChatStage.ASK_PREFERENCE.value
     set_user_state(user_id, state)
-
     return {
         "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
     }
@@ -194,17 +212,33 @@ def handle_outside(user_id, user_message, state):
     }
 
     
-def handle_done(user_id, state):
+def handle_done(user_id, user_message, state):
+    ctx = state.get("context", {})
+    # Store previous stage
+    ctx["previous_stage"] = state["stage"]
+
+    # Clear temprary data, but keep session-level information
+    new_context = {
+        "previous_stage": ctx["previous_stage"],
+        "session_start": ctx.get("session_start")
+    }
+    state["context"] = new_context  
     state["stage"] = ChatStage.MAIN_MENU.value
     set_user_state(user_id, state)
+
+    if ctx.get("previous_stage") == ChatStage.RECOMMENDATION.value:
+        return {
+            "text": "¿Te gustaría ver más productos o buscar en otra categoría?",
+            "options": [
+                "Ver más productos",
+                "Buscar otra categoría",
+                "Volver al menú principal"
+            ]
+        }
+    
     return {
         "text": "(DONE) ¿Te puedo ayudar con algo más?",
-        "options": [
-            "Catálogo de Productos 💊",
-            "Ayuda Personalizada de Suplementos 💡",
-            "Dudas sobre mis pedidos 📦",
-            "Promociones especiales 💸"
-        ]
+        "options": MAIN_OPTIONS
     }
 
 def handle_init(user_id, state):
@@ -240,10 +274,38 @@ def handle_recommendation(user_id, user_message, state):
         "otro": []
     }
 
+    # Store users context
+    ctx = state.get("context", {})
+    ctx["last_category_request"] = user_message
+    state["context"] = ctx
+
+    user_input = user_message.lower().strip()
+
+    # Handle Other option
+    if "otro" in user_input:
+        state["stage"] = ChatStage.CUSTOM_QUERY.value
+        set_user_state(user_id, state)
+        return {
+            "text": "Por favor, describe específicamente lo que estás buscando mejorar:"
+        }
+    
+    # Match category
     matched_keywords, matched_category = match_category(user_message, category_map)
 
     if matched_keywords:
         results = query_weaviate(matched_keywords)
+
+    # Handle No Results case
+        if not results:
+            return {
+                "text": f"No encontré productos específicos para '{matched_category}'. ¿Te gustaría:",
+                "options": [
+                    "Ver todas las categorías",
+                    "Describir tu necesidad de otra forma",
+                    "Hablar con un asesor"
+                ]
+            }
+
         state["stage"] = ChatStage.DONE.value
         set_user_state(user_id, state)
         return {
@@ -251,6 +313,21 @@ def handle_recommendation(user_id, user_message, state):
             "products": results
         }
     else:
+        # Offer some help section
+        attempts = ctx.get("category_attempts", 0)
+        ctx["category_attempts"] = attempts + 1
+        state["context"] = ctx
+        set_user_state(user_id, state)
+
+        if attempts >= 2:
+            return {
+                "texto": "Parece que estás teniendo dificultades para encontrar lo que buscas. ¿Te gustaría:",
+                "options": [
+                    "Ver todas las categorías disponibles",
+                    "Describir tu necesidad específica",
+                    "Hablar con un asesor"
+                ]
+            }
         return {
             "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
             "options": list(category_map.keys())
