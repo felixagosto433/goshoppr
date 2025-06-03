@@ -87,7 +87,6 @@ def handle_main_menu(user_id, user_message, state):
         case msg if "catálogo" in msg or "recomendados" in msg:
             state["stage"] = ChatStage.RECOMMENDATION.value
             set_user_state(user_id, state)
-
             return {
                 "text": "(MAIN) Perfecto. ¿Qué estás buscando mejorar?",
                 "options": [
@@ -267,9 +266,9 @@ def handle_recommendation(user_id, user_message, state):
         "higado": ["hígado", "hepáticos", "renal"], 
         "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
         "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
-        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar", "barriga", "pipa"],
+        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar", "barriga", "pipa", "salud digestiva"],
         "corazón": ["corazón", "presión arterial", "colesterol"],
-        "inmunidad": ["inmunidad", "defensas", "sistema inmune"],
+        "inmunidad": ["inmunidad", "defensas", "sistema inmune", "apoyo immune"],
         "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
         "otro": []
     }
