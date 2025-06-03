@@ -385,19 +385,15 @@ window.addEventListener('load', function () {
 
     // API Functions
     async function callApi(message, userId, retries = 3) {
-      const API_URL = "https://production-goshop-d116fe7863dc.herokuapp.com/chat";
-      // Add CORS proxy
-      const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+      const API_URL = 'https://production-goshop-d116fe7863dc.herokuapp.com/chat';
       
       for (let i = 0; i < retries; i++) {
         try {
-          const response = await fetch(CORS_PROXY + API_URL, {
+          const response = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-Client-Version": "1.0.0",
-              "X-Request-ID": crypto.randomUUID(),
-              "Origin": window.location.origin
+              "Accept": "application/json"
             },
             body: JSON.stringify({
               message,
