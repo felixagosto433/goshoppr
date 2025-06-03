@@ -6,14 +6,14 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
 
-    # Debug-friendly CORS configuration
+    # Simple CORS configuration
     CORS(app, 
          resources={r"/*": {
-             "origins": "*",  # Allow all origins temporarily for debugging
+             "origins": "*",
              "methods": ["GET", "POST", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+             "allow_headers": ["Content-Type", "Accept"],
              "supports_credentials": True,
-             "expose_headers": ["Content-Length", "Content-Range"]
+             "max_age": 3600
          }})
 
     app.register_blueprint(main)
