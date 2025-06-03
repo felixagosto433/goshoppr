@@ -6,21 +6,12 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
 
-    # Enhanced CORS configuration for BigCommerce domain
-    CORS(app, resources={r"/*": {
-        "origins": "https://goshop.mybigcommerce.com",
-        "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-        "allow_headers": [
-            "Content-Type",
-            "Authorization",
-            "X-Requested-With",
-            "Accept",
-            "Origin"
-        ],
-        "expose_headers": ["Content-Length", "Content-Range"],
-        "supports_credentials": True,
-        "max_age": 3600  # Cache preflight requests for 1 hour
-    }})
+    # Simple CORS configuration
+    CORS(app, 
+         origins=["https://goshop.mybigcommerce.com", "http://localhost:3000", "http://localhost:5000"],
+         methods=["GET", "POST", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+         supports_credentials=True)
 
     app.register_blueprint(main)
     app.weaviate_client = get_weaviate_client()
