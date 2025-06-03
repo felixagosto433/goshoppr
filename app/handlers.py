@@ -89,7 +89,7 @@ def handle_main_menu(user_id, user_message, state):
             set_user_state(user_id, state)
 
             return {
-                "text": "Perfecto. ¿Qué estás buscando mejorar?",
+                "text": "(MAIN) Perfecto. ¿Qué estás buscando mejorar?",
                 "options": [
                     "Energía y Vitalidad", 
                     "Sueño y Relajación", 
@@ -135,7 +135,7 @@ def handle_personal_advice(user_id, user_message, state):
     state["stage"] = ChatStage.ASK_MEDICAL.value
     set_user_state(user_id, state)
     return {
-        "text": "Para darte las mejores recomendaciones, ¿cuál es tu objetivo principal de salud?"
+        "text": "¿Tienes alguna condicion medica?"
     }
 
 def handle_medical(user_id, user_message, state):
@@ -172,7 +172,7 @@ def handle_custom_query(user_id, user_message, state):
     concepts = extract_concepts(user_message.lower())
     results = query_weaviate(concepts)
     return {
-    "text": "Aquí tienes recomendaciones personalizadas:",
+    "text": "(CUS) Aquí tienes recomendaciones personalizadas:",
     "products": results
     }
 
@@ -196,7 +196,7 @@ def handle_outside(user_id, user_message, state):
         state["context"] = ctx
         set_user_state(user_id, state)
         return {
-            "text": "Por favor, escoge una de las siguientes opciones 👇",
+            "text": "(OUT) Por favor, escoge una de las siguientes opciones 👇",
             "options": MAIN_OPTIONS
         }
     
@@ -207,7 +207,7 @@ def handle_outside(user_id, user_message, state):
     concepts = extract_concepts(user_message.lower())
     results = query_weaviate(concepts)
     return {
-        "text": "Gracias por compartir. Aquí tienes algunas recomendaciones:",
+        "text": "(OUT) Gracias por compartir. Aquí tienes algunas recomendaciones:",
         "products": results
     }
 
@@ -228,7 +228,7 @@ def handle_done(user_id, user_message, state):
 
     if ctx.get("previous_stage") == ChatStage.RECOMMENDATION.value:
         return {
-            "text": "¿Te gustaría ver más productos o buscar en otra categoría?",
+            "text": "(DONE) ¿Te gustaría ver más productos o buscar en otra categoría?",
             "options": [
                 "Ver más productos",
                 "Buscar otra categoría",
@@ -257,7 +257,7 @@ def handle_init(user_id, state):
 
 def fallback_response():
     return {
-        "text": "Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
+        "text": "(FALL) Lo siento, no entendí eso. ¿Puedes intentarlo de otra forma?"
     }
 
 def handle_recommendation(user_id, user_message, state):
@@ -286,7 +286,7 @@ def handle_recommendation(user_id, user_message, state):
         state["stage"] = ChatStage.CUSTOM_QUERY.value
         set_user_state(user_id, state)
         return {
-            "text": "Por favor, describe específicamente lo que estás buscando mejorar:"
+            "text": " (REC) Por favor, describe específicamente lo que estás buscando mejorar:"
         }
     
     # Match category
@@ -329,6 +329,6 @@ def handle_recommendation(user_id, user_message, state):
                 ]
             }
         return {
-            "text": "No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
+            "text": "(REC) No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
             "options": list(category_map.keys())
         }
