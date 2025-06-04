@@ -261,16 +261,12 @@ def fallback_response():
 
 def handle_recommendation(user_id, user_message, state):
     category_map = {
-        "articular": ["articulaciones", "movilidad", "huesos", "músculos"],
-        "hombres": ["testosterona", "masculinidad", "prostata", "impulso sexual", "esperma", "urinario"], 
-        "higado": ["hígado", "hepáticos", "renal"], 
-        "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
-        "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
-        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar", "barriga", "pipa", "salud digestiva"],
-        "corazón": ["corazón", "presión arterial", "colesterol"],
+        "energia": ["energía", "vitalidad", "fatiga", "multivitaminas", "energía y vitalidad"],
+        "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso", "sueño y relajación"],
+        "corazon": ["corazón", "presión arterial", "colesterol", "salud del corazón", "cardiovascular"],
         "inmunidad": ["inmunidad", "defensas", "sistema inmune", "apoyo immune"],
-        "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
-        "otro": []
+        "digestivo": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "salud digestiva"],
+        "otro": ["otro", "especificar"]
     }
 
     # Store users context
@@ -281,20 +277,20 @@ def handle_recommendation(user_id, user_message, state):
     user_input = user_message.lower().strip()
 
     # Handle Other option
-    if "otro" in user_input:
+    if any(term in user_input for term in ["otro", "especificar"]):
         state["stage"] = ChatStage.CUSTOM_QUERY.value
         set_user_state(user_id, state)
         return {
-            "text": " (REC) Por favor, describe específicamente lo que estás buscando mejorar:"
+            "text": "(REC) Por favor, describe específicamente lo que estás buscando mejorar:"
         }
     
     # Match category
-    matched_keywords, matched_category = match_category(user_message, category_map)
+    matched_keywords, matched_category = match_category(user_input, category_map)
 
     if matched_keywords:
         results = query_weaviate(matched_keywords)
 
-    # Handle No Results case
+        # Handle No Results case
         if not results:
             return {
                 "text": f"No encontré productos específicos para '{matched_category}'. ¿Te gustaría:",
@@ -311,23 +307,31 @@ def handle_recommendation(user_id, user_message, state):
             "text": f"Aquí tienes algunas recomendaciones para {matched_category}:",
             "products": results
         }
-    else:
-        # Offer some help section
-        attempts = ctx.get("category_attempts", 0)
-        ctx["category_attempts"] = attempts + 1
-        state["context"] = ctx
-        set_user_state(user_id, state)
+    
+    # If no category matched, provide the options again
+    attempts = ctx.get("category_attempts", 0)
+    ctx["category_attempts"] = attempts + 1
+    state["context"] = ctx
+    set_user_state(user_id, state)
 
-        if attempts >= 2:
-            return {
-                "texto": "Parece que estás teniendo dificultades para encontrar lo que buscas. ¿Te gustaría:",
-                "options": [
-                    "Ver todas las categorías disponibles",
-                    "Describir tu necesidad específica",
-                    "Hablar con un asesor"
-                ]
-            }
+    if attempts >= 2:
         return {
-            "text": "(REC) No entendí esa categoría. ¿Puedes escoger una de las siguientes?",
-            "options": list(category_map.keys())
+            "text": "Parece que estás teniendo dificultades para encontrar lo que buscas. ¿Te gustaría:",
+            "options": [
+                "Ver todas las categorías disponibles",
+                "Describir tu necesidad específica",
+                "Hablar con un asesor"
+            ]
         }
+    
+    return {
+        "text": "(REC) Por favor, selecciona una de las siguientes categorías:",
+        "options": [
+            "Energía y Vitalidad", 
+            "Sueño y Relajación", 
+            "Salud del Corazón",
+            "Apoyo Immune", 
+            "Salud Digestiva", 
+            "Otro (especificar)"
+        ]
+    }
