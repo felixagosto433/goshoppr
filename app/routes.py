@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from weaviate.classes.query import Filter
 from weaviate.util import generate_uuid5
 from utils import extract_concepts, query_weaviate, match_category
-from app.db import get_user_state, set_user_state, get_user_context, set_user_context
+from app.db import get_user_state, set_user_state, get_user_context
 from app.handlers import process_user_input
 
 main = Blueprint('main', __name__)
