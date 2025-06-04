@@ -129,10 +129,11 @@ def handle_personal_advice(user_id, user_message, state):
     ctx = state.get("context", {})
     if user_message and user_message.strip():
         ctx["initial_query"] = user_message.strip()
-
+        
+    state["stage"] = ChatStage.ASK_MEDICAL.value  # Set next stage
     state["context"] = ctx
-    state["stage"] = ChatStage.ASK_MEDICAL.value
     set_user_state(user_id, state)
+    
     return {
         "text": "¿Tienes alguna condicion medica?"
     }
@@ -145,9 +146,10 @@ def handle_medical(user_id, user_message, state):
     if "initial_query" in ctx:
         ctx["health_goal"] = f"{ctx['initial_query']} - {user_message}"
 
+    state["stage"] = ChatStage.ASK_PREFERENCE.value  # Set next stage
     state["context"] = ctx
-    state["stage"] = ChatStage.ASK_PREFERENCE.value
     set_user_state(user_id, state)
+    
     return {
         "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
     }
@@ -292,6 +294,8 @@ def handle_recommendation(user_id, user_message, state):
 
         # Handle No Results case
         if not results:
+            state["stage"] = ChatStage.RECOMMENDATION.value  # Maintain recommendation stage
+            set_user_state(user_id, state)
             return {
                 "text": f"No encontré productos específicos para '{matched_category}'. ¿Te gustaría:",
                 "options": [
@@ -312,6 +316,7 @@ def handle_recommendation(user_id, user_message, state):
     attempts = ctx.get("category_attempts", 0)
     ctx["category_attempts"] = attempts + 1
     state["context"] = ctx
+    state["stage"] = ChatStage.RECOMMENDATION.value  # Explicitly maintain the recommendation stage
     set_user_state(user_id, state)
 
     if attempts >= 2:
