@@ -36,16 +36,7 @@ def set_user_state(user_id, state):
     cursor.execute("""
         INSERT INTO chat_state (user_id, stage, context)
         VALUES (%s, %s, %s)
-        ON CONFLICT (user_id)
-        DO UPDATE SET stage = EXCLUDED.stage, context = EXCLUDED.context
     """, (user_id, state["stage"], json.dumps(state["context"])))
-
-def set_user_context(user_id, context):
-    cursor.execute("""
-        UPDATE chat_state
-        SET context = %s
-        WHERE user_id = %s
-    """, (json.dumps(context), user_id))
 
 def reset_user_state(user_id):
     cursor.execute("DELETE FROM chat_state WHERE user_id = %s", (user_id,))
