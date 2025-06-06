@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 import requests
 
-load_dotenv()
+load_dotenv(".env.staging")
 
 HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
 API_URL = "https://api-inference.huggingface.co/models/joeddav/xlm-roberta-large-xnli"
