@@ -1,13 +1,62 @@
 from app.client import get_weaviate_client
-import difflib
+import unicodedata
+import re
+from transformers import pipeline
+from datetime import datetime
+from typing import List, Dict, Any, Union
 
-def query_weaviate(concepts):
+# Transformer / NLP setup
+classifier = pipeline(
+    "zero-shot-classification",
+    model="joeddav/xlm-roberta-large-xnli"  # or mDeBERTa
+)
+
+def normalize_text(text: str) -> str:
+    """Normalize text by removing accents and special characters."""
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("utf-8")
+    text = re.sub(r"[^\w\s]", "", text)  # remove non-word symbols
+    return text.lower().strip()
+
+def append_history(state: Dict[str, Any], sender: str, message: str) -> None:
+    """Append a message to the conversation history."""
+    history = state.get("history", [])
+    # Limit history to last 100 messages to prevent memory issues
+    if len(history) >= 100:
+        history = history[-99:]
+    
+    history.append({
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "sender": sender,
+        "message": message,
+        "stage": state.get("stage", "unknown")
+    })
+    state["history"] = history
+
+def query_weaviate(concepts: Union[str, List[str]], client_instance: Any) -> List[Dict[str, Any]]:
+    """
+    Query Weaviate database for supplements matching given concepts.
+    
+    Args:
+        concepts: String or list of strings to search for
+        client_instance: Weaviate client instance
+    
+    Returns:
+        List of matching supplement dictionaries
+    """
     try:
-        client = get_weaviate_client()
-        collection = client.collections.get("Supplements")
+        if not client_instance:
+            print("❌ Error: No Weaviate client provided")
+            return []
+            
+        if isinstance(concepts, str):
+            concepts = [concepts]
+            
+        collection = client_instance.collections.get("Supplements")
         response = collection.query.near_text(
             query = concepts,
-            limit = 3
+            limit = 2
         )
 
         if response and response.objects:
@@ -23,7 +72,6 @@ def query_weaviate(concepts):
                     "allergens": obj.properties.get("allergens")
                 }
                 for obj in response.objects
-
             ]
         
         return [] # No objects found
@@ -32,53 +80,21 @@ def query_weaviate(concepts):
         print(f"❌ Error in query_weaviate: {str(e)}")
         return []
     
-def match_category(user_message, category_map, cutoff=0.7):
-    message = user_message.lower()
-    matched_keywords = []
-    matched_category = None
+def match_category(message: str, category_list: Dict[str, List[str]]) -> List[str]:
+    """
+    Match a message to a category and return associated keywords.
+    
+    Args:
+        message: User message to categorize
+        category_list: Dictionary mapping categories to lists of keywords
+    
+    Returns:
+        List of keywords associated with the matched category
+    """
+    if not message or not category_list:
+        return []
+        
+    results = classifier(message, list(category_list.keys()), multi_label=False)
+    category = results["labels"][0]
 
-    # First try exact substring match
-    for key, val in category_map.items():
-        if key in message or any(c in message for c in val):
-            matched_keywords.extend(val)
-            matched_category = key
-            print(f"🟢 Matched by substring: {key}")
-            return matched_keywords, matched_category
-
-    # Fallback: fuzzy match the entire user message to category names
-    possible_categories = list(category_map.keys())
-    close_matches = difflib.get_close_matches(message, possible_categories, n=1, cutoff=cutoff)
-    if close_matches:
-        matched_category = close_matches[0]
-        matched_keywords = category_map[matched_category]
-        print(f"🔍 Fuzzy matched category: {matched_category}")
-        return matched_keywords, matched_category
-
-    print("⚠️ No match found")
-    return [], None
-
-def extract_concepts(user_message):
-    message = user_message.lower()
-
-    keyword_map = {
-        "articular": ["articulaciones", "movilidad", "huesos", "músculos"],
-        "hombres": ["testosterona", "masculinidad", "prostata", "impulso sexual", "esperma", "urinario"], 
-        "higado": ["hígado", "hepáticos", "renal"], 
-        "sueño": ["sueño", "melatonina", "relajación", "dormir", "descanso"],
-        "energía": ["energía", "fatiga", "vitalidad", "multivitaminas"],
-        "digestión": ["digestión", "probióticos", "salud intestinal", "hinchazón", "estómago", "gastrointestinal", "malestar"],
-        "corazón": ["corazón", "presión arterial", "colesterol"],
-        "inmunidad": ["inmunidad", "defensas", "sistema inmune"],
-        "omega": ["cardiovascular", "cerebral", "ácidos grasos", "EPA", "DHA"],
-    }
-
-    matched_concepts = []
-
-    for keyword, concepts in keyword_map.items():
-        if keyword in message or any(c in message for c in concepts):
-            matched_concepts.extend(concepts)
-
-    if matched_concepts:
-        return list(set(matched_concepts))  # remove duplicates
-
-    return [user_message]
+    return category_list.get(category, [])

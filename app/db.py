@@ -25,13 +25,6 @@ def get_user_state(user_id):
         }
     return None
 
-def get_user_context(user_id):
-    cursor.execute("SELECT context FROM chat_state WHERE user_id = %s", (user_id,))
-    row = cursor.fetchone()
-    if row:
-        return row["context"]
-    return {}
-
 def set_user_state(user_id, state):
     cursor.execute("""
         INSERT INTO chat_state (user_id, stage, context)
