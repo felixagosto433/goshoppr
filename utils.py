@@ -1,15 +1,32 @@
 from app.client import get_weaviate_client
 import unicodedata
 import re
-from transformers import pipeline
 from datetime import datetime
 from typing import List, Dict, Any, Union
+import os
+from dotenv import load_dotenv
+import requests
 
-# Transformer / NLP setup
-classifier = pipeline(
-    "zero-shot-classification",
-    model="joeddav/xlm-roberta-large-xnli"  # or mDeBERTa
-)
+load_dotenv()
+
+HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
+API_URL = "https://api-inference.huggingface.co/models/joeddav/xlm-roberta-large-xnli"
+headers = {"Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}"}
+
+def query_classifier(text: str, labels: List[str]) -> Dict[str, Any]:
+    """
+    Query the Hugging Face model through their Inference API
+    """
+    try:
+        payload = {
+            "inputs": text,
+            "parameters": {"candidate_labels": labels},
+        }
+        response = requests.post(API_URL, headers=headers, json=payload)
+        return response.json()
+    except Exception as e:
+        print(f"❌ Error querying classifier: {str(e)}")
+        return {"labels": labels, "scores": [1.0/len(labels)] * len(labels)}
 
 def normalize_text(text: str) -> str:
     """Normalize text by removing accents and special characters."""
@@ -94,7 +111,7 @@ def match_category(message: str, category_list: Dict[str, List[str]]) -> List[st
     if not message or not category_list:
         return []
         
-    results = classifier(message, list(category_list.keys()), multi_label=False)
+    results = query_classifier(message, list(category_list.keys()))
     category = results["labels"][0]
 
     return category_list.get(category, [])
