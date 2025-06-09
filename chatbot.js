@@ -407,6 +407,9 @@ window.addEventListener('load', function () {
           }
           
           const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
           analytics.track('api_success', { message, attempt: i + 1 });
           return data;
         } catch (err) {
@@ -442,7 +445,9 @@ window.addEventListener('load', function () {
           const products = Array.isArray(data.products) ? data.products : [];
           const options = Array.isArray(data.options) ? data.options : [];
 
-          addMessage(botText, "bot-message");
+          // Remove any "(INIT)", "(REC)", "(CUS)", "(DONE)" prefixes from the text
+          const cleanBotText = botText.replace(/^\((INIT|REC|CUS|DONE)\)/, '').trim();
+          addMessage(cleanBotText, "bot-message");
 
           if (products.length > 0) {
             const formatted = products.map(item => `
@@ -451,6 +456,8 @@ window.addEventListener('load', function () {
                 <b>🏷️ Categoría:</b> ${escapeHtml(item.category)}<br>
                 <b>📝 Descripción:</b> ${escapeHtml(item.description)}<br>
                 <b>💊 Uso:</b> ${escapeHtml(item.usage)}<br>
+                ${item.recommended_for ? `<b>👍 Recomendado para:</b> ${escapeHtml(item.recommended_for)}<br>` : ''}
+                ${item.allergens ? `<b>⚠️ Alérgenos:</b> ${escapeHtml(item.allergens)}<br>` : ''}
                 <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">🔗 Ver producto</a>
               </div>
             `).join("");
@@ -458,7 +465,7 @@ window.addEventListener('load', function () {
             addMessage(formatted, "bot-message");
           }
 
-          if (options.length > 0) {
+          if (options && options.length > 0) {
             addOptions(options);
           }
         })
@@ -488,14 +495,25 @@ window.addEventListener('load', function () {
     toggle.addEventListener("click", () => {
       container.classList.toggle("visible");
       if (!window.__chatbotInitialized) {
+        addMessage("Conectando con el asistente...", "bot-message");
         callApi("__init__", getUserId())
           .then(data => {
-            if (data.text) addMessage(data.text, "bot-message");
-            if (data.options?.length) addOptions(data.options);
+            if (data.text) {
+              // Remove the connecting message
+              messages.lastElementChild?.remove();
+              // Remove any "(INIT)" prefix from the text
+              const cleanBotText = data.text.replace(/^\(INIT\)/, '').trim();
+              addMessage(cleanBotText, "bot-message");
+            }
+            if (data.options?.length) {
+              addOptions(data.options);
+            }
           })
           .catch(err => {
             error("Initial chat trigger failed:", err);
-            addMessage("Bot: Hola 👋 Pero no pude conectarme al servidor.", "bot-message");
+            // Remove the connecting message
+            messages.lastElementChild?.remove();
+            addMessage("👋 Hola! Pero no pude conectarme al servidor. Por favor, intenta de nuevo más tarde.", "bot-message");
           });
         window.__chatbotInitialized = true;
       }
