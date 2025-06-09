@@ -1,6 +1,6 @@
 from enum import Enum
 from app.db import get_user_state, set_user_state
-from utils import query_weaviate, match_category, normalize_text, append_history, get_weaviate_client
+from utils import query_weaviate, match_category, normalize_text, append_history, get_weaviate_client, query_classifier as classifier
 from difflib import get_close_matches
 from datetime import datetime
 
@@ -33,6 +33,7 @@ cat_subcat = {
 
 # === Enum for Chat Stages ===
 class ChatStage(Enum):
+    WELCOME = "welcome"
     MAIN_MENU = "main_menu"
     RECOMMENDATION = "recommendation_category"
     PERSONAL_ADVICE = "personal_advice"
@@ -44,7 +45,7 @@ class ChatStage(Enum):
 def process_user_input(user_id, user_message):
   
   # Checks state
-  state = get_user_state(user_id) or {"stage": ChatStage.WELCOME.value, "context":{}}
+  state = get_user_state(user_id) or {"stage": ChatStage.MAIN_MENU.value, "context":{}}
 
   # Add session_start if not already present
   if "session_start" not in state.get("context", {}):
