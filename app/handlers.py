@@ -102,7 +102,7 @@ def handle_init(user_id, state):
 def handle_main_menu(user_id, user_message, state):
   clean_message = normalize_text(user_message)
 
-  classification = classifier(clean_message, MAIN_OPTIONS, multi_label=False)
+  classification = classifier(clean_message, MAIN_OPTIONS)
   match = classification["labels"][0]
   selected = next((opt for opt in MAIN_OPTIONS if opt.lower() == match.lower()), None)
 
@@ -227,7 +227,7 @@ def handle_recommendation(user_id, user_message, state):
         append_history(state, "bot", response["text"])
         return response
 
-    classification = classifier(clean_message, recomendations, multi_label=False)
+    classification = classifier(clean_message, recomendations)
     match = classification["labels"][0]
     selected = next((opt for opt in recomendations if opt.lower() == match.lower()), None)
     
@@ -248,7 +248,7 @@ def handle_recommendation(user_id, user_message, state):
 
 def handle_custom_query(user_id, user_message, state):
     clean_message = normalize_text(user_message)
-    classification = classifier(clean_message, list(cat_subcat.keys()), multi_label=False)
+    classification = classifier(clean_message, list(cat_subcat.keys()))
     match = classification["labels"][0]
 
     # Get Weaviate client and query
