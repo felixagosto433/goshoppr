@@ -192,7 +192,9 @@ def handle_preference(user_id, user_message, state):
     ctx["preference"] = normalize_text(user_message)
     state["context"] = ctx
     query_terms = [ctx["health_goal"], ctx["preference"]]
-    results = query_weaviate(query_terms)
+    # Get Weaviate client and query
+    client = get_weaviate_client()
+    results = query_weaviate(query_terms, client)
     state["stage"] = ChatStage.DONE.value
     
     set_user_state(user_id, state)
