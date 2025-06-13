@@ -4,6 +4,7 @@ import psycopg2.extras
 from dotenv import load_dotenv
 import json
 from datetime import datetime
+import csv
 
 load_dotenv(".env.staging")
 
@@ -67,3 +68,50 @@ def reset_user_state(user_id):
     letting the next state be a new row
     """
     pass  # No need to delete anything since we're keeping history
+
+def create_pueblos_table():
+    """Create the pueblos table if it doesn't exist"""
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pueblos (
+            Name TEXT,
+            Address TEXT
+        )
+    """)
+    conn.commit()
+
+def load_pharmacies_from_csv():
+    """Load pharmacy data from CSV file into the database"""
+    # First clear existing data
+    cursor.execute("TRUNCATE TABLE pueblos")
+    
+    # Read and insert CSV data
+    with open('Farmacias - Sheet1.csv', 'r', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            cursor.execute("""
+                INSERT INTO pueblos (Name, Address, Pueblo)
+                VALUES (%s, %s, %s)
+            """, (row['Customer Name'], row['Address'], row['Pueblo']))
+    
+    conn.commit()
+
+def get_pueblos():
+    """Get all unique pueblo names from the table"""
+    cursor.execute("SELECT DISTINCT Pueblo FROM pueblos ORDER BY Pueblo")
+    pueblos = cursor.fetchall()
+    return [row[0] for row in pueblos]
+
+def get_pharmacy_address(user_message, limit=2):
+    """
+    Query the top two pharmacies from the table based on the pueblo name
+    """
+    cursor.execute("""
+        SELECT Name, Address FROM pueblos
+        WHERE Pueblo ILIKE %s
+        LIMIT %s
+    """, (f"%{user_message}%", limit))
+    rows = cursor.fetchall()
+    return [{
+        "Pharmacy": row[0],
+        "Location": row[1]
+    } for row in rows]
