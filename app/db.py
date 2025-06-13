@@ -71,14 +71,19 @@ def reset_user_state(user_id):
 
 def create_pueblos_table():
     """Create the pueblos table if it doesn't exist"""
+    # Drop the table if it exists
+    cursor.execute("DROP TABLE IF EXISTS pueblos")
+    
+    # Create the table with correct column names
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS pueblos (
+        CREATE TABLE pueblos (
             "Customer Name" TEXT,
             Address TEXT,
             Pueblo TEXT
         )
     """)
     conn.commit()
+    print("Table created successfully!")
 
 def load_pharmacies_from_csv():
     """Load pharmacy data from CSV file into the database"""
