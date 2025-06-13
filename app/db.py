@@ -73,8 +73,9 @@ def create_pueblos_table():
     """Create the pueblos table if it doesn't exist"""
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS pueblos (
-            Name TEXT,
-            Address TEXT
+            "Customer Name" TEXT,
+            Address TEXT,
+            Pueblo TEXT
         )
     """)
     conn.commit()
@@ -84,20 +85,25 @@ def load_pharmacies_from_csv():
     # First clear existing data
     cursor.execute("TRUNCATE TABLE pueblos")
     
+    # Use direct file path
+    csv_path = r"C:\Users\Felix\Desktop\Freelance_Projects\GoShopPR\Farmacias - Sheet1.csv"
+    print(f"Loading data from: {csv_path}")
+    
     # Read and insert CSV data
-    with open('Farmacias - Sheet1.csv', 'r', encoding='utf-8') as file:
+    with open(csv_path, 'r', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
         for row in csv_reader:
             cursor.execute("""
-                INSERT INTO pueblos (Name, Address, Pueblo)
+                INSERT INTO pueblos ("Customer Name", Address, Pueblo)
                 VALUES (%s, %s, %s)
             """, (row['Customer Name'], row['Address'], row['Pueblo']))
     
     conn.commit()
+    print("Data loaded successfully!")
 
 def get_pueblos():
     """Get all unique pueblo names from the table"""
-    cursor.execute("SELECT DISTINCT Pueblo FROM pueblos ORDER BY Pueblo")
+    cursor.execute('SELECT DISTINCT Pueblo FROM pueblos ORDER BY Pueblo')
     pueblos = cursor.fetchall()
     return [row[0] for row in pueblos]
 
@@ -106,7 +112,7 @@ def get_pharmacy_address(user_message, limit=2):
     Query the top two pharmacies from the table based on the pueblo name
     """
     cursor.execute("""
-        SELECT Name, Address FROM pueblos
+        SELECT "Customer Name", Address FROM pueblos
         WHERE Pueblo ILIKE %s
         LIMIT %s
     """, (f"%{user_message}%", limit))
