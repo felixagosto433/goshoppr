@@ -114,14 +114,13 @@ def get_pueblos():
     return [row[0] for row in pueblos]
 
 def get_pharmacy_address(user_message, limit=2):
-    """
-    Query the top two pharmacies from the table based on the pueblo name
-    """
+    user_message = user_message.strip()  # Remove leading/trailing spaces
+    print(f"Searching for pueblo: '{user_message}'")  # Debug print
     cursor.execute("""
-        SELECT "Customer Name", Address FROM pueblos
-        WHERE TRIM(Pueblo) ILIKE %s
+        SELECT "Customer Name", address FROM pueblos
+        WHERE pueblo ILIKE %s
         LIMIT %s
-    """, (f"%{user_message.strip()}%", limit))
+    """, (f"%{user_message}%", limit))
     rows = cursor.fetchall()
     return [{
         "Pharmacy": row[0],
