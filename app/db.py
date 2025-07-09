@@ -98,17 +98,18 @@ def load_pharmacies_from_csv():
     with open(csv_path, 'r', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
         for row in csv_reader:
+            pueblo_clean = row['Pueblo'].strip()
             cursor.execute("""
                 INSERT INTO pueblos ("Customer Name", Address, Pueblo)
                 VALUES (%s, %s, %s)
-            """, (row['Customer Name'], row['Address'], row['Pueblo']))
+            """, (row['Customer Name'], row['Address'], pueblo_clean))
     
     conn.commit()
     print("Data loaded successfully!")
 
 def get_pueblos():
     """Get all unique pueblo names from the table"""
-    cursor.execute('SELECT DISTINCT Pueblo FROM pueblos ORDER BY Pueblo')
+    cursor.execute('SELECT DISTINCT TRIM(Pueblo) FROM pueblos ORDER BY TRIM(Pueblo)')
     pueblos = cursor.fetchall()
     return [row[0] for row in pueblos]
 
@@ -118,9 +119,9 @@ def get_pharmacy_address(user_message, limit=2):
     """
     cursor.execute("""
         SELECT "Customer Name", Address FROM pueblos
-        WHERE Pueblo ILIKE %s
+        WHERE TRIM(Pueblo) ILIKE %s
         LIMIT %s
-    """, (f"%{user_message}%", limit))
+    """, (f"%{user_message.strip()}%", limit))
     rows = cursor.fetchall()
     return [{
         "Pharmacy": row[0],
