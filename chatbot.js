@@ -444,10 +444,23 @@ window.addEventListener('load', function () {
           const botText = data.text?.trim() || "🤖 No entendí eso, ¿puedes intentarlo de otra forma?";
           const products = Array.isArray(data.products) ? data.products : [];
           const options = Array.isArray(data.options) ? data.options : [];
+          const pharmacies = Array.isArray(data.pharmacies) ? data.pharmacies : [];
 
           // Remove any "(INIT)", "(REC)", "(CUS)", "(DONE)" prefixes from the text
           const cleanBotText = botText.replace(/^\((INIT|REC|CUS|DONE)\)/, '').trim();
           addMessage(cleanBotText, "bot-message");
+
+          // Render pharmacies if present
+          if (pharmacies.length > 0) {
+            const formatted = pharmacies.map(pharmacy => `
+              <div style="margin-bottom: 10px;">
+                <a href="${escapeHtml(pharmacy.maps_link)}" target="_blank" rel="noopener noreferrer">
+                  🏥 ${escapeHtml(pharmacy.name)}
+                </a>
+              </div>
+            `).join("");
+            addMessage(formatted, "bot-message");
+          }
 
           if (products.length > 0) {
             const formatted = products.map(item => `
