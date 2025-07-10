@@ -41,7 +41,8 @@ def chat():
         return jsonify({
             "text": logic_response["text"],
             "products": logic_response.get("products", []),
-            "options": logic_response.get("options", [])
+            "options": logic_response.get("options", []),
+            "pharmacies": logic_response.get("pharmacies", [])
         }), 200
 
     except Exception as e:
