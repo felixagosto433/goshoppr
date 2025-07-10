@@ -478,6 +478,11 @@ window.addEventListener('load', function () {
             addMessage(formatted, "bot-message");
           }
 
+          // Show followup_text if present
+          if (data.followup_text) {
+            addMessage(data.followup_text, "bot-message");
+          }
+
           if (options && options.length > 0) {
             addOptions(options);
           }
