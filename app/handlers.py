@@ -248,8 +248,10 @@ def handle_recommendation(user_id, user_message, state):
     print(f"🧠 New stage set to: {state['stage']}")
     
     response = {
-        "text": f"Aquí tienes algunas recomendaciones para {selected}: ¿Deseas que busquemos las farmacias mas cercanas donde puuedes conseguir nuestros productos?",
-        "products": results
+        "text": f"Aquí tienes algunas recomendaciones para {selected}:",
+        "products": results,
+        "followup_text": "¿Deseas que busquemos las farmacias más cercanas donde puedes conseguir nuestros productos?",
+        "options": ["Si", "No"]
     }
     append_history(state, "bot", response["text"])
     return response
@@ -268,8 +270,10 @@ def handle_custom_query(user_id, user_message, state):
     print(f"🧠 New stage set to: {state['stage']}")
 
     response = {
-        "text": "(CUS) Aquí tienes recomendaciones personalizadas:¿Deseas que busquemos las farmacias mas cercanas donde puuedes conseguir nuestros productos?",
-        "products": results
+        "text": "Aquí tienes recomendaciones personalizadas:",
+        "products": results,
+        "followup_text": "¿Deseas que busquemos las farmacias más cercanas donde puedes conseguir nuestros productos?",
+        "options": ["Si", "No"]
     }
     append_history(state, "bot", response["text"])
     return response
