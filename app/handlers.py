@@ -35,6 +35,7 @@ cat_subcat = {
 class ChatStage(Enum):
     WELCOME = "welcome"
     MAIN_MENU = "main_menu"
+    PEDIDO = "pedido"
     RECOMMENDATION = "recommendation_category"
     PERSONAL_ADVICE = "personal_advice"
     ASK_MEDICAL = "ask_medical"
@@ -69,6 +70,8 @@ def route_message(user_id, user_message, state):
   match stage:
     case ChatStage.MAIN_MENU.value:
         return handle_main_menu(user_id, user_message, state)
+    case ChatStage.PEDIDO.value:
+        return handle_pedido(user_id, user_message, state)
     case ChatStage.RECOMMENDATION.value:
         return handle_recommendation(user_id, user_message, state)
     case ChatStage.PERSONAL_ADVICE.value:
@@ -135,12 +138,12 @@ def handle_main_menu(user_id, user_message, state):
         return response
 
     elif "pedidos" in selected.lower():
-        state["stage"] = ChatStage.DONE.value
+        state["stage"] = ChatStage.PEDIDO.value
         set_user_state(user_id, state)
         
         response = {
             "text": "¿En qué puedo ayudarte con tu pedido?",
-            "options": ["Estado del pedido", "Métodos de pago", "Cambios y devoluciones"]
+            "options": ["Estado del pedido", "Cambios y devoluciones"]
         }
         append_history(state, "bot", response["text"])
         return response
@@ -160,6 +163,39 @@ def handle_main_menu(user_id, user_message, state):
       "text": "Lo siento, no entendí tu selección. Por favor escoge una opción:",
       "options": MAIN_OPTIONS
   }
+
+def handle_pedido(user_id, user_message, state):
+    clean_message = normalize_text(user_message)
+    # You can use a classifier or just check for keywords
+    if "cambio" in clean_message or "devolucion" in clean_message or "devolución" in clean_message:
+        return handle_pedidos(user_id, user_message, state)
+    elif "estado" in clean_message:
+        # Implement a handler for order status if you want
+        return {
+            "text": "Para consultar el estado de tu pedido, por favor proporciona tu número de pedido o revisa tu correo de confirmación."
+        }
+    else:
+        return {
+            "text": "¿Sobre qué aspecto de tu pedido necesitas ayuda?",
+            "options": ["Estado del pedido", "Cambios y devoluciones"]
+        }
+    
+def handle_pedidos(user_id, user_message, state):
+    ctx = state.setdefault("context", {})
+    state["stage"] = ChatStage.DONE.value
+    state["context"] = ctx
+    set_user_state(user_id, state)
+    print(f"🧠 New stage set to: {state['stage']}")
+    response = {
+        "messages": [
+            "Aquí tiene la información sobre Pedidos, Devoluciones y Cambios:",
+            "📦 Envíos 🚚 Cobertura: Solo realizamos envíos dentro de Puerto Rico (no internacionales). ⏱️ Los pedidos se procesan en 1-2 días hábiles desde la confirmación. 📅 Pedidos en fines de semana o feriados se procesan el siguiente día hábil.",
+            "🔄 Devoluciones, Reembolsos y Cambios ✅ Puedes devolver productos dentro de los 30 días posteriores a la entrega, siempre que estén sin abrir y sin usar. 📧 Cómo devolver: 1. Escribe a nuestro equipo con tu número de pedido y motivo. 2. Recibirás una etiqueta e instrucciones. 3. Empaca el producto y envíalo con la etiqueta proporcionada. 💸 El cliente cubre el envío, salvo error de nuestra parte o producto defectuoso. 💳 Reembolsos: Se procesan en 7-10 días hábiles al mismo método de pago. 🚫 No aceptamos devoluciones de productos abiertos o usados, productos en promoción, o productos dañados por mal uso o descuento y tarjetas de regalo.",
+            "↔️ No realizamos cambios directos. Si deseas un cambio, devuelve el producto siguiendo el proceso anterior y haz un nuevo pedido."
+        ]
+    }
+    append_history(state, "bot", response["messages"][0])
+    return response
         
 def handle_personal_advice(user_id, user_message, state):
   # Store initial message
@@ -308,6 +344,7 @@ def handle_location(user_id, user_message, state):
    clean_message = normalize_text(user_message).upper()
    # Save the Pueblo to the database inside the context.
    state["context"]["Pueblo"] = clean_message.upper()
+   set_user_state(user_id, state)
 
    # Find the closest matching pueblo
    results = classifier(clean_message, pueblos)
@@ -343,6 +380,8 @@ def handle_done(user_id, user_message, state):
   }
   append_history(state, "bot", response["text"])
   return response
+
+
 
 def fallback_response():
     response = {
