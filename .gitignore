@@ -1,6 +1,8 @@
 # Ignore virtual environments
 venv/
 env/
+Keys/
+
 
 # Ignore Python cache files
 __pycache__/
@@ -10,8 +12,7 @@ __pycache__/
 
 # Ignore environment variables
 .env
-.env.staging
-.env.productiongit
+.env*
 
 # Ignore large files
 *.csv
