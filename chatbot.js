@@ -448,7 +448,12 @@ window.addEventListener('load', function () {
 
           // Remove any "(INIT)", "(REC)", "(CUS)", "(DONE)" prefixes from the text
           const cleanBotText = botText.replace(/^\((INIT|REC|CUS|DONE)\)/, '').trim();
-          addMessage(cleanBotText, "bot-message");
+          // If backend returns an array of messages, show each as a separate bot message
+          if (Array.isArray(data.messages)) {
+            data.messages.forEach(msg => addMessage(msg, "bot-message"));
+          } else {
+            addMessage(cleanBotText, "bot-message");
+          }
 
           // Render pharmacies if present
           if (pharmacies.length > 0) {
@@ -474,7 +479,6 @@ window.addEventListener('load', function () {
                 <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">🔗 Ver producto</a>
               </div>
             `).join("");
-            
             addMessage(formatted, "bot-message");
           }
 
