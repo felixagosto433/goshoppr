@@ -439,6 +439,7 @@ window.addEventListener('load', function () {
 
       callApi(userMessage, getUserId())
         .then(data => {
+          console.log("API response:", data); // Debug log for API response
           removeTypingIndicator(typingIndicator);
           
           const botText = data.text?.trim() || "🤖 No entendí eso, ¿puedes intentarlo de otra forma?";
@@ -453,6 +454,11 @@ window.addEventListener('load', function () {
             data.messages.forEach(msg => addMessage(msg, "bot-message"));
           } else {
             addMessage(cleanBotText, "bot-message");
+          }
+
+          // Always show followup_text if present
+          if (data.followup_text) {
+            addMessage(data.followup_text, "bot-message");
           }
 
           // Render pharmacies if present
@@ -480,11 +486,6 @@ window.addEventListener('load', function () {
               </div>
             `).join("");
             addMessage(formatted, "bot-message");
-          }
-
-          // Show followup_text if present
-          if (data.followup_text) {
-            addMessage(data.followup_text, "bot-message");
           }
 
           if (options && options.length > 0) {
