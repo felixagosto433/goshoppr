@@ -441,18 +441,18 @@ window.addEventListener('load', function () {
         .then(data => {
           console.log("API response:", data); // Debug log for API response
           removeTypingIndicator(typingIndicator);
-          
-          const botText = data.text?.trim() || "🤖 No entendí eso, ¿puedes intentarlo de otra forma?";
+
           const products = Array.isArray(data.products) ? data.products : [];
           const options = Array.isArray(data.options) ? data.options : [];
           const pharmacies = Array.isArray(data.pharmacies) ? data.pharmacies : [];
 
-          // Remove any "(INIT)", "(REC)", "(CUS)", "(DONE)" prefixes from the text
-          const cleanBotText = botText.replace(/^(\(INIT|REC|CUS|DONE)\)/, '').trim();
           // If backend returns an array of messages, show each as a separate bot message
           if (Array.isArray(data.messages)) {
             data.messages.forEach(msg => addMessage(msg, "bot-message"));
           } else {
+            const botText = data.text?.trim() || "🤖 No entendí eso, ¿puedes intentarlo de otra forma?";
+            // Remove any "(INIT)", "(REC)", "(CUS)", "(DONE)" prefixes from the text
+            const cleanBotText = botText.replace(/^(\(INIT|REC|CUS|DONE)\)/, '').trim();
             addMessage(cleanBotText, "bot-message");
           }
 
@@ -521,9 +521,11 @@ window.addEventListener('load', function () {
         addMessage("Conectando con el asistente...", "bot-message");
         callApi("__init__", getUserId())
           .then(data => {
-            if (data.text) {
-              // Remove the connecting message
-              messages.lastElementChild?.remove();
+            // Remove the connecting message
+            messages.lastElementChild?.remove();
+            if (Array.isArray(data.messages)) {
+              data.messages.forEach(msg => addMessage(msg, "bot-message"));
+            } else if (data.text) {
               // Remove any "(INIT)" prefix from the text
               const cleanBotText = data.text.replace(/^\(INIT\)/, '').trim();
               addMessage(cleanBotText, "bot-message");

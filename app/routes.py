@@ -39,7 +39,8 @@ def chat():
         print(f"⬇️STATE AFTER {user_id}: {get_user_state(user_id)}")
 
         return jsonify({
-            "text": logic_response["text"],
+            "text": logic_response.get("text", None),
+            "messages": logic_response.get("messages", None),
             "products": logic_response.get("products", []),
             "options": logic_response.get("options", []),
             "pharmacies": logic_response.get("pharmacies", []),
