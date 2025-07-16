@@ -542,7 +542,6 @@ window.addEventListener('load', function () {
       }
     });
 
-    // Offline support
     window.addEventListener('online', () => {
       log('Connection restored');
       addMessage("✅ Conexión restaurada", "bot-message");
