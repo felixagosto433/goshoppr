@@ -82,7 +82,7 @@ def get_items():
 def add_item():
     data = request.get_json()
     try:
-        required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link"]
+        required_fields = ["nombre", "precio", "inventario", "categoria", "descripcion", "ingredientes", "allergens", "usage", "recommended_for", "link", "image"]
         missing_fields = [item for item in required_fields if item not in data]
 
         if missing_fields:
@@ -118,6 +118,9 @@ def update_item(name):
             return jsonify({"error": "Item not found"}), 404
 
         uuid = items[0].uuid
+        # Ensure 'image' is present in update
+        if "image" not in data:
+            return jsonify({"error": "Missing field: image"}), 400
         collection.data.update(uuid=uuid, properties=data)
         return jsonify({"message": "Item updated successfully!"}), 200
 
