@@ -97,7 +97,7 @@ def handle_init(user_id, state):
   set_user_state(user_id, state)
   
   response = {
-      "text": "(INIT)👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
+      "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
       "options": [
           "Catálogo de Productos 💊",
           "Ayuda Personalizada de Suplementos 💡",
@@ -266,7 +266,7 @@ def handle_recommendation(user_id, user_message, state):
         set_user_state(user_id, state)
         
         response = {
-            "text": "(REC) Por favor, describe específicamente lo que estás buscando mejorar:"
+            "text": "Por favor, describe específicamente lo que estás buscando mejorar:"
         }
         append_history(state, "bot", response["text"])
         return response
@@ -375,7 +375,7 @@ def handle_done(user_id, user_message, state):
   print(f"🧠 New stage set to: {state['stage']}")
 
   response = {
-    "text": "(DONE) ¿Te puedo ayudar con algo más?",
+    "text": "¿Te puedo ayudar con algo más?",
     "options": MAIN_OPTIONS
   }
   append_history(state, "bot", response["text"])
