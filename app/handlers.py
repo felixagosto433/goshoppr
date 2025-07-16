@@ -188,13 +188,12 @@ def handle_pedidos(user_id, user_message, state):
     print(f"🧠 New stage set to: {state['stage']}")
     response = {
         "messages": [
-            "Aquí tiene la información sobre Pedidos, Devoluciones y Cambios:",
-            "📦 Envíos 🚚 Cobertura: Solo realizamos envíos dentro de Puerto Rico (no internacionales). ⏱️ Los pedidos se procesan en 1-2 días hábiles desde la confirmación. 📅 Pedidos en fines de semana o feriados se procesan el siguiente día hábil.",
-            "🔄 Devoluciones, Reembolsos y Cambios ✅ Puedes devolver productos dentro de los 30 días posteriores a la entrega, siempre que estén sin abrir y sin usar. 📧 Cómo devolver: 1. Escribe a nuestro equipo con tu número de pedido y motivo. 2. Recibirás una etiqueta e instrucciones. 3. Empaca el producto y envíalo con la etiqueta proporcionada. 💸 El cliente cubre el envío, salvo error de nuestra parte o producto defectuoso. 💳 Reembolsos: Se procesan en 7-10 días hábiles al mismo método de pago. 🚫 No aceptamos devoluciones de productos abiertos o usados, productos en promoción, o productos dañados por mal uso o descuento y tarjetas de regalo.",
-            "↔️ No realizamos cambios directos. Si deseas un cambio, devuelve el producto siguiendo el proceso anterior y haz un nuevo pedido."
+            "<h3>📦 <b>Envíos</b></h3>🚚 Cobertura: Solo realizamos envíos dentro de Puerto Rico (no internacionales).<br>⏱️ Los pedidos se procesan en 1-2 días hábiles desde la confirmación.<br>📅 Pedidos en fines de semana o feriados se procesan el siguiente día hábil.",
+            "<h3>🔄 <b>Devoluciones, Reembolsos y Cambios</b></h3>✅ Puedes devolver productos dentro de los 30 días posteriores a la entrega, siempre que estén sin abrir y sin usar.<br>📧 <b>Cómo devolver:</b> 1. Escribe a nuestro equipo con tu número de pedido y motivo. 2. Recibirás una etiqueta e instrucciones. 3. Empaca el producto y envíalo con la etiqueta proporcionada.<br>💸 El cliente cubre el envío, salvo error de nuestra parte o producto defectuoso.<br>💳 Reembolsos: Se procesan en 7-10 días hábiles al mismo método de pago.<br>🚫 No aceptamos devoluciones de productos abiertos o usados, productos en promoción, o productos dañados por mal uso o descuento y tarjetas de regalo.",
+            "<h3>↔️ <b>No realizamos cambios directos</b></h3>Si deseas un cambio, devuelve el producto siguiendo el proceso anterior y haz un nuevo pedido."
         ]
     }
-    append_history(state, "bot", response["messages"][0])
+    append_history(state, "bot", "Información sobre Pedidos, Devoluciones y Cambios enviada.")
     return response
         
 def handle_personal_advice(user_id, user_message, state):
