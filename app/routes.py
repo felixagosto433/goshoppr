@@ -42,7 +42,8 @@ def chat():
             "text": logic_response["text"],
             "products": logic_response.get("products", []),
             "options": logic_response.get("options", []),
-            "pharmacies": logic_response.get("pharmacies", [])
+            "pharmacies": logic_response.get("pharmacies", []),
+            "followup_text": logic_response.get("followup_text", None)
         }), 200
 
     except Exception as e:
