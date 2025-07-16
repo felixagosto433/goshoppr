@@ -6,7 +6,7 @@ from weaviate.classes.config import Property, DataType, Configure
 import json
 
 # Cloud connection. 
-load_dotenv(".env.production")
+load_dotenv(".env.staging")
 WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
 # Open AI authentication
