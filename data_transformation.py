@@ -31,7 +31,8 @@ def transform_row(row):
         "allergens": row["allergens"].split(', '),  # Split allergens into a list
         "usage": row["usage"],
         "recommended_for": row["recommended_for"].split(', '),  # Split recommendations into a list
-        "link": row["link"]
+        "link": row["link"],
+        "image": row["image"]
     }
 
 # Apply the transformation

@@ -4,7 +4,7 @@ import os
 from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 
 # Cloud connection. 
-load_dotenv(".env.production")
+load_dotenv(".env.staging")
 WEAVIATE_ADMIN_KEY = os.getenv("WEAVIATE_ADMIN_KEY")
 
 # Open AI authentication
