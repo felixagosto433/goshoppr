@@ -277,6 +277,7 @@ def handle_recommendation(user_id, user_message, state):
     # Get Weaviate client and query
     client = get_weaviate_client()
     results = query_weaviate(selected, client)
+    print("DEBUG PRODUCTS:", results)
     
     state["stage"] = ChatStage.PRE_LOCATION.value
     set_user_state(user_id, state)

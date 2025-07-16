@@ -79,6 +79,7 @@ def query_weaviate(concepts: Union[str, List[str]], client_instance: Any) -> Lis
         if response and response.objects:
             return [
                 {
+                    "image": obj.properties.get("image"),
                     "name": obj.properties.get("nombre"),
                     "description": obj.properties.get("descripcion"),
                     "price": obj.properties.get("precio"),

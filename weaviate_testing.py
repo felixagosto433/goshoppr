@@ -27,7 +27,7 @@ api_key = os.getenv("WEAVIATE_ADMIN_KEY")
 headers = {"X-OpenAI-Api-Key": openai_key}
 
 client = weaviate.connect_to_weaviate_cloud(
-    cluster_url="https://hgassth0ruwsy8cpspbxag.c0.europe-west3.gcp.weaviate.cloud",
+    cluster_url=os.getenv("WEAVIATE_CLOUD_URL"),
     auth_credentials=Auth.api_key(api_key),
     additional_config=AdditionalConfig(timeout=Timeout(init=10)),
     headers=headers
@@ -116,14 +116,14 @@ except Exception as e:
 # print("SCHEMA")
 # print(collection)
 
-# # PRINT ALL OBJECTS
-# print("_________________________________________")
-# print("OBJECTS")
-# for item in collection.iterator():
-#     print("+++++++ID++++++++")
-#     print(item.uuid)
-#     print("+++++++PROPERTIES++++++++")
-#     print(item.properties)
+# PRINT ALL OBJECTS
+print("_________________________________________")
+print("OBJECTS")
+for item in collection.iterator():
+    print("+++++++ID++++++++")
+    print(item.uuid)
+    print("+++++++PROPERTIES++++++++")
+    print(item.properties)
 
 # PRINT RESPONSE
 # response = collection.query.near_text(
@@ -140,7 +140,7 @@ except Exception as e:
 #         print("NO NAME FOUND")
 
 
-# Viewing all arguments for collection. 
+#Viewing all arguments for collection. 
 # config = collection.config.get()
 # properties = {prop.name for prop in config.properties}
 # print(properties)
@@ -265,8 +265,8 @@ except Exception as e:
 
 # DELETE A COLLECTION
 
-client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
-print("Collection succesfully deleted")
+# client.collections.delete("Supplements")  # THIS WILL DELETE THE SPECIFIED COLLECTION(S) AND THEIR OBJECTS
+# print("Collection succesfully deleted")
 
 # Deleting each item in the weaviate db by id
 # try:
