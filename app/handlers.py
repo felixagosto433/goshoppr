@@ -3,6 +3,7 @@ from app.db import get_user_state, set_user_state, get_pueblos, get_pharmacy_add
 from utils import query_weaviate, match_category, normalize_text, append_history, get_weaviate_client, query_classifier as classifier
 from difflib import get_close_matches
 from datetime import datetime
+from app.analytics_db import AnalyticsDB, track_product_recommendation
 
 MAIN_OPTIONS = [
     "Catálogo de Productos",
@@ -46,23 +47,25 @@ class ChatStage(Enum):
     PRE_LOCATION = "pre-localizacion"
 
 def process_user_input(user_id, user_message):
-  
-  # Checks state
-  state = get_user_state(user_id) or {"stage": ChatStage.MAIN_MENU.value, "context":{}}
+    state = get_user_state(user_id) or {"stage": ChatStage.MAIN_MENU.value, "context":{}}
 
-  # Add session_start if not already present
-  if "session_start" not in state.get("context", {}):
-      state["context"]["session_start"] = datetime.utcnow().isoformat() + "Z"
+    if "session_start" not in state.get("context", {}):
+        state["context"]["session_start"] = datetime.utcnow().isoformat() + "Z"
 
-  append_history(state, "user", user_message)
-  print(f"State at start {state}")
-  stage = state["stage"] 
+    # Only create a new session if not already present
+    if "session_id" not in state["context"]:
+        session_id = AnalyticsDB.create_user_session(user_id)
+        state["context"]["session_id"] = session_id
+    else:
+        session_id = state["context"]["session_id"]
 
-  # Initial trigger
-  if user_message == "__init__":
-      return handle_init(user_id, state)
-  # Route message
-  return route_message(user_id, user_message, state)
+    append_history(state, "user", user_message)
+    print(f"State at start {state}")
+    stage = state["stage"]
+
+    if user_message == "__init__":
+        return handle_init(user_id, state)
+    return route_message(user_id, user_message, state)
 
 def route_message(user_id, user_message, state):
   stage = state["stage"]
@@ -232,11 +235,30 @@ def handle_preference(user_id, user_message, state):
     ctx = state.setdefault("context", {})
     ctx["preference"] = normalize_text(user_message)
     state["context"] = ctx
+    # When using it later
+    session_id = state["context"].get("session_id")
     query_terms = [ctx["health_goal"], ctx["preference"]]
     # Get Weaviate client and query
     client = get_weaviate_client()
     results = query_weaviate(query_terms, client)
     state["stage"] = ChatStage.PRE_LOCATION.value
+
+    AnalyticsDB.save_user_goals(
+      user_id=user_id,
+      session_id=session_id,
+      health_goal=ctx.get("health_goal"),
+      medical_condition=ctx.get("medical"),
+      supplement_preference=ctx.get("preference"),
+      pueblo=ctx.get("pueblo")
+      )
+
+    track_product_recommendation(
+      user_id=user_id,
+      session_id=session_id,
+      products=results,
+      stage=state["stage"],
+      context=state.get("context")
+      )
     
     set_user_state(user_id, state)
     print(f"🧠 New stage set to: {state['stage']}")
@@ -278,6 +300,16 @@ def handle_recommendation(user_id, user_message, state):
     client = get_weaviate_client()
     results = query_weaviate(selected, client)
     print("DEBUG PRODUCTS:", results)
+
+    session_id = state["context"].get("session_id")
+
+    track_product_recommendation(
+      user_id=user_id,
+      session_id=session_id,
+      products=results,
+      stage=state["stage"],
+      context=state.get("context")
+      )
     
     state["stage"] = ChatStage.PRE_LOCATION.value
     set_user_state(user_id, state)
@@ -300,6 +332,14 @@ def handle_custom_query(user_id, user_message, state):
     # Get Weaviate client and query
     client = get_weaviate_client()
     results = query_weaviate(cat_subcat[match], client)
+    session_id = state["context"].get("session_id")
+    track_product_recommendation(
+      user_id=user_id,
+      session_id=session_id,
+      products=results,
+      stage=state["stage"],
+      context=state.get("context")
+      )
 
     state["stage"] = ChatStage.PRE_LOCATION.value
     set_user_state(user_id, state)
@@ -361,6 +401,12 @@ def handle_location(user_id, user_message, state):
          "maps_link": pharmacy["Location"]
       })
 
+   AnalyticsDB.track_location_search(
+      pueblo=matched_pueblo,
+      pharmacy_name=pharmacy_info[0]["name"] if pharmacy_info else None,
+      successful=bool(pharmacy_info)
+  )
+   
    response = {
       "text": f"Estas son las farmacias más cercanas en {matched_pueblo}:",
       "pharmacies": pharmacy_info
@@ -373,12 +419,14 @@ def handle_done(user_id, user_message, state):
   state["context"]["session_end"] = datetime.utcnow().isoformat() + "Z"
   set_user_state(user_id, state)
   print(f"🧠 New stage set to: {state['stage']}")
+  session_id = state["context"].get("session_id")
 
   response = {
     "text": "¿Te puedo ayudar con algo más?",
     "options": MAIN_OPTIONS
   }
   append_history(state, "bot", response["text"])
+  AnalyticsDB.update_session_end(session_id)
   return response
 
 

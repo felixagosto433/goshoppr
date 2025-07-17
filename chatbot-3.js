@@ -151,6 +151,8 @@ window.addEventListener('load', function () {
         display: flex;
         gap: 10px;
         background: white;
+        position: relative;
+        z-index: 10000;
       }
 
       #chatbot-input {
@@ -269,8 +271,8 @@ window.addEventListener('load', function () {
         }
 
         #chatbot-toggle {
-          bottom: 10px;
-          right: 10px;
+          bottom: 80px;
+          right: 20px;
         }
       }
       .bot-message h3 {
@@ -474,15 +476,12 @@ window.addEventListener('load', function () {
 
           if (products.length > 0) {
             const formatted = products.map(item => `
-              <div style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 12px;">
-                ${item.image ? `<img src="${escapeHtml(item.image)}" alt="Imagen de ${escapeHtml(item.name)}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : ''}
+              <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                ${item.image ? `<img src="${escapeHtml(item.image)}" alt="Imagen de ${escapeHtml(item.name)}" style="max-width:75px; max-height:105px; object-fit:contain; background:#fff; border-radius:8px; align-self:center; padding:4px; border:1px solid #eee;">` : ''}
                 <div>
                   <b>🟢 ${escapeHtml(item.name)}</b> - 💲${escapeHtml(item.price)}<br>
-                  <b>🏷️ Categoría:</b> ${escapeHtml(item.category)}<br>
                   <b>📝 Descripción:</b> ${escapeHtml(item.description)}<br>
                   <b>💊 Uso:</b> ${escapeHtml(item.usage)}<br>
-                  ${item.recommended_for ? `<b>👍 Recomendado para:</b> ${escapeHtml(item.recommended_for)}<br>` : ''}
-                  ${item.allergens ? `<b>⚠️ Alérgenos:</b> ${escapeHtml(item.allergens)}<br>` : ''}
                   <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">🔗 Ver producto</a>
                 </div>
               </div>
