@@ -88,19 +88,16 @@ class AnalyticsDB:
     
     @staticmethod
     def track_location_search(pueblo: str, pharmacy_name: str = None, successful: bool = True):
-        """Track location searches for analytics"""
+        """Track location searches for analytics (logs every interaction with timestamp)"""
         cursor.execute("""
-            INSERT INTO location_analytics (pueblo, pharmacy_name, total_searches, successful_matches, last_searched)
-            VALUES (%s, %s, 1, %s, %s)
-            ON CONFLICT (pueblo) DO UPDATE SET
-                total_searches = location_analytics.total_searches + 1,
-                successful_matches = location_analytics.successful_matches + %s,
-                last_searched = EXCLUDED.last_searched
+            INSERT INTO location_analytics (
+                pueblo, pharmacy_name, total_searches, successful_matches, last_searched, interaction_time
+            ) VALUES (%s, %s, 1, %s, %s, %s)
         """, (
-            pueblo, pharmacy_name, 
+            pueblo, pharmacy_name,
             1 if successful else 0,
             datetime.utcnow(),
-            1 if successful else 0
+            datetime.utcnow()
         ))
     
     @staticmethod
