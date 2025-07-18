@@ -299,8 +299,8 @@ def track_product_recommendation(user_id: str, session_id: int, products: List[D
         AnalyticsDB.track_product_interaction(
             user_id=user_id,
             session_id=session_id,
-            product_name=product.get("nombre", "Unknown"),
-            product_category=product.get("categoria", "Unknown"),
+            product_name=product.get("name", "Unknown"),
+            product_category=product.get("category", "Unknown"),
             interaction_type="shown",
             stage=stage,
             user_goal=context.get("health_goal") if context else None,
