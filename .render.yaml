@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: goshoppr
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: MB_DB_CONNECTION_URI
+        value: your_postgres_connection_string_herepostgres://u4tju31jl3spqf:p1822e622190a8d4c52eb3f431e5f0746cfd1dc34bd80fdcc45b597d340085fb8@ceqbglof0h8enj.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/davga98mhuvfbe
