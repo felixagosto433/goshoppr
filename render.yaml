@@ -7,3 +7,5 @@ services:
     envVars:
       - key: MB_DB_CONNECTION_URI
         value: postgres://u4tju31jl3spqf:p1822e622190a8d4c52eb3f431e5f0746cfd1dc34bd80fdcc45b597d340085fb8@ceqbglof0h8enj.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/davga98mhuvfbe
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx1024m
