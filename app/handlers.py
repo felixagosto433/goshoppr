@@ -151,16 +151,16 @@ def handle_main_menu(user_id, user_message, state):
         append_history(state, "bot", response["text"])
         return response
 
-    elif "promociones" in selected.lower():
-        state["stage"] = ChatStage.DONE.value
-        set_user_state(user_id, state)
+    # elif "promociones" in selected.lower():
+    #     state["stage"] = ChatStage.DONE.value
+    #     set_user_state(user_id, state)
         
-        response = {
-            "text": "¡Excelente! ¿Te gustaría recibir un cupón o ver productos en oferta?",
-            "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
-        }
-        append_history(state, "bot", response["text"])
-        return response
+    #     response = {
+    #         "text": "¡Excelente! ¿Te gustaría recibir un cupón o ver productos en oferta?",
+    #         "options": ["Sí, quiero un cupón", "Ver productos en oferta"]
+    #     }
+    #     append_history(state, "bot", response["text"])
+    #     return response
 
   return {
       "text": "Lo siento, no entendí tu selección. Por favor escoge una opción:",
