@@ -9,17 +9,22 @@ import os
 load_dotenv(".env.google")
 
 # Database connection
+print("Connecting to Database...")
 DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
 cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+print("CONNECTED!")
 
 # Google Sheets connection
+print("Connecting to Google Sheets...")
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 SERVICE_KEY = os.getenv("SERVICE_KEY")
 creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_KEY, scope)
 client = gspread.authorize(creds)
+print("CONNECTED!")
 
 def export_table_to_sheet(cursor, sheet_name, query):
+    print(f"Exporting to {sheet_name}")
     cursor.execute(query)
     data = cursor.fetchall()
     columns = [desc[0] for desc in cursor.description]
@@ -28,6 +33,7 @@ def export_table_to_sheet(cursor, sheet_name, query):
     sheet = client.open("GoShop_Database").worksheet(sheet_name)
     sheet.clear()
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print(f"Export Completed!")
 
 # Export each table
 export_table_to_sheet(cur, "chat_state", "SELECT * FROM chat_state")
