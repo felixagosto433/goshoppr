@@ -30,6 +30,10 @@ def export_table_to_sheet(cursor, sheet_name, query):
     columns = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(data, columns=columns)
 
+    # ✅ Convert all datetime columns to strings
+    for col in df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'object']):
+        df[col] = df[col].astype(str)
+
     sheet = client.open("GoShop_Database").worksheet(sheet_name)
     sheet.clear()
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
