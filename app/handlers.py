@@ -6,10 +6,9 @@ from datetime import datetime
 from app.analytics_db import AnalyticsDB, track_product_recommendation
 
 MAIN_OPTIONS = [
-    "Catálogo de Productos",
-    "Ayuda Personalizada de Suplementos",
-    "Dudas sobre mis pedidos",
-    "Promociones especiales"
+    "Catálogo de Productos 💊",
+    "Ayuda Personalizada de Suplementos 💡",
+    "Dudas sobre mis pedidos 📦"
 ]
 
 REC_OPTIONS = [
@@ -104,8 +103,7 @@ def handle_init(user_id, state):
       "options": [
           "Catálogo de Productos 💊",
           "Ayuda Personalizada de Suplementos 💡",
-          "Dudas sobre mis pedidos 📦",
-          "Promociones especiales 💸"
+          "Dudas sobre mis pedidos 📦"
       ]
   }
   append_history(state, "bot", response["text"])
