@@ -151,6 +151,7 @@ def handle_main_menu(user_id, user_message, state):
         append_history(state, "bot", response["text"])
         return response
 
+    # FOR ADDING OTHER OPTIONS!
     # elif "promociones" in selected.lower():
     #     state["stage"] = ChatStage.DONE.value
     #     set_user_state(user_id, state)
@@ -226,7 +227,7 @@ def handle_medical(user_id, user_message, state):
   print(f"🧠 New stage set to: {state['stage']}")
   
   response = {
-      "text": "¿Tienes alguna preferencia en el tipo de suplemento (vitaminas, minerales, hierbas)?"
+      "text": "¿Tienes alguna preferencia en el tipo de suplemento (suplementos, vitaminas, minerales, hierbas)?"
   }
   append_history(state, "bot", response["text"])
   return response
@@ -263,8 +264,10 @@ def handle_preference(user_id, user_message, state):
     set_user_state(user_id, state)
     print(f"🧠 New stage set to: {state['stage']}")
     response = {
-        "text": "Gracias por la información. Aquí tienes productos que podrían ayudarte. ¿Desea que busquemos la farmacia mas cercana?",
-        "products": results
+        "text": f"Aquí tienes algunas recomendaciones:",
+        "products": results,
+        "followup_text": "¿Deseas que busquemos las farmacias más cercanas donde puedes conseguir nuestros productos?",
+        "options": ["Si", "No"]
     }
     append_history(state, "bot", response["text"])
     return response
