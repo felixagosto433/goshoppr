@@ -5,10 +5,15 @@ from difflib import get_close_matches
 from datetime import datetime
 from app.analytics_db import AnalyticsDB, track_product_recommendation
 
+# MAIN_OPTIONS = [
+#     "Catálogo de Productos 💊",
+#     "Ayuda Personalizada de Suplementos 💡",
+#     "Dudas sobre mis pedidos 📦"
+# ]
+
 MAIN_OPTIONS = [
     "Catálogo de Productos 💊",
-    "Ayuda Personalizada de Suplementos 💡",
-    "Dudas sobre mis pedidos 📦"
+    "Ayuda Personalizada de Suplementos 💡"
 ]
 
 REC_OPTIONS = [
@@ -98,12 +103,19 @@ def handle_init(user_id, state):
   state["context"] = {}
   set_user_state(user_id, state)
   
+#   response = {
+#       "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
+#       "options": [
+#           "Catálogo de Productos 💊",
+#           "Ayuda Personalizada de Suplementos 💡",
+#           "Dudas sobre mis pedidos 📦"
+#       ]
+#   }
   response = {
       "text": "👋 ¡Hola! Soy tu asistente de salud de Xtravit. ¿Qué deseas hacer hoy?",
       "options": [
           "Catálogo de Productos 💊",
-          "Ayuda Personalizada de Suplementos 💡",
-          "Dudas sobre mis pedidos 📦"
+          "Ayuda Personalizada de Suplementos 💡"
       ]
   }
   append_history(state, "bot", response["text"])
