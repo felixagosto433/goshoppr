@@ -92,7 +92,7 @@ class AnalyticsDB:
             ) VALUES (%s, %s, %s, %s)
         """, (
             pueblo, pharmacy_name,
-            1 if successful else 0,
+            datetime.utcnow(),
             datetime.utcnow()
         ))
 
