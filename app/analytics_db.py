@@ -50,7 +50,6 @@ class AnalyticsDB:
         session_id: int,
         product_name: str,
         product_category: str,
-        interaction_type: str,
         stage: str,
         user_goal: str = None,
         user_preference: str = None
@@ -58,12 +57,10 @@ class AnalyticsDB:
         """Track product interactions for analytics"""
         cursor.execute("""
             INSERT INTO product_interactions (
-                user_id, session_id, product_name, product_category,
-                interaction_type, stage, user_goal, user_preference
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                user_id, session_id, product_name, product_category, stage, user_goal, user_preference
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
-            user_id, session_id, product_name, product_category,
-            interaction_type, stage, user_goal, user_preference
+            user_id, session_id, product_name, product_category, stage, user_goal, user_preference
         ))
     
     @staticmethod
@@ -91,12 +88,11 @@ class AnalyticsDB:
         """Track location searches for analytics (logs every interaction with timestamp)"""
         cursor.execute("""
             INSERT INTO location_analytics (
-                pueblo, pharmacy_name, total_searches, successful_matches, last_searched, interaction_time
-            ) VALUES (%s, %s, 1, %s, %s, %s)
+                pueblo, pharmacy_name, last_searched, interaction_time
+            ) VALUES (%s, %s, %s, %s)
         """, (
             pueblo, pharmacy_name,
             1 if successful else 0,
-            datetime.utcnow(),
             datetime.utcnow()
         ))
 
@@ -138,7 +134,6 @@ def track_product_recommendation(user_id: str, session_id: int, products: List[D
             session_id=session_id,
             product_name=product.get("name", "Unknown"),
             product_category=product.get("category", "Unknown"),
-            interaction_type="shown",
             stage=stage,
             user_goal=context.get("health_goal") if context else None,
             user_preference=context.get("preference") if context else None
