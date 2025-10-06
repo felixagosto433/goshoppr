@@ -1,0 +1,31 @@
+heroku login                # Log in to your Heroku account
+heroku logout               # Log out of Heroku
+
+heroku apps                 # List all apps
+heroku apps:info            # Show info about the current app
+heroku rename new-name      # Rename the current app
+heroku open                 # Open the app in your browser
+heroku destroy --app my-app # Permanently delete an app
+
+heroku logs --tail          # Stream logs in real-time
+heroku logs --num 100       # Show last 100 log lines
+
+heroku ps                   # Show running dynos
+heroku ps:scale web=1       # Scale to 1 web dyno
+heroku ps:scale worker=2    # Scale worker dynos
+heroku restart              # Restart all dynos
+heroku restart web.1        # Restart a specific dyno
+
+heroku addons               # List add-ons
+heroku addons:create heroku-postgresql:hobby-dev # Add Postgres DB
+heroku pg:psql              # Open Postgres interactive shell
+heroku pg:info              # Show database info
+
+heroku config               # List all config vars
+heroku config:get KEY       # Show a single config var
+heroku config:set KEY=val   # Set a config var
+heroku config:unset KEY     # Remove a config var
+
+heroku whoami               # Show the logged-in account
+heroku help                 # List all commands
+heroku help <command>       # Show help for a specific command
