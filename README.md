@@ -1,3 +1,5 @@
+⚠️ CHAT HAS BEEN TEMPORARILY DISABLED. USE THIS LINK IN SCRIPT MANAGER AS SCRIPT TO ENABLE IT AGAIN ⚠️
+
 🚀 GoShopPR AI Chatbot — Local Setup
 
 An AI-powered chatbot built with Flask, Weaviate, and OpenAI.
